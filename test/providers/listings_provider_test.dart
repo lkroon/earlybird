@@ -96,7 +96,7 @@ void main() {
 
       // Manually set loading state
       provider.loadMore(); // Start loading
-      final listenerCallCount = 0;
+      const listenerCallCount = 0;
       provider.addListener(() {
         // Should not be called again
       });

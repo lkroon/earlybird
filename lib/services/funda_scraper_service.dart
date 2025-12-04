@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' as html_parser;
 import 'scraper_service.dart';
@@ -97,7 +98,7 @@ class FundaScraperService implements ScraperService {
         }
       }
     } catch (e) {
-      print('Error fetching detail page: $e');
+      debugPrint('Error fetching detail page: $e');
     }
 
     return '';

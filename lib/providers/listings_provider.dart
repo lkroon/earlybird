@@ -48,7 +48,7 @@ class ListingsProvider extends ChangeNotifier {
     } catch (e) {
       _isLoading = false;
       notifyListeners();
-      print('Error fetching listings: $e');
+      debugPrint('Error fetching listings: $e');
       rethrow;
     }
   }
@@ -77,7 +77,7 @@ class ListingsProvider extends ChangeNotifier {
     } catch (e) {
       _isLoadingMore = false;
       notifyListeners();
-      print('Error loading more listings: $e');
+      debugPrint('Error loading more listings: $e');
     }
   }
 
