@@ -89,7 +89,8 @@ class ListingsProvider extends ChangeNotifier {
 
   /// Checks if we should load more based on scroll position
   bool shouldLoadMore(int currentItemIndex) {
-    return currentItemIndex >= _listings.length - AppConstants.loadMoreThreshold;
+    return currentItemIndex >=
+        _listings.length - AppConstants.loadMoreThreshold;
   }
 
   /// Refreshes the listings

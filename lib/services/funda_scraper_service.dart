@@ -11,7 +11,8 @@ class FundaScraperService implements ScraperService {
   String get serviceName => 'Funda';
 
   @override
-  Future<List<Map<String, String>>> fetchListingHeadings(SearchFilter filter) async {
+  Future<List<Map<String, String>>> fetchListingHeadings(
+      SearchFilter filter) async {
     final fundaUrl = UrlBuilder.buildFundaUrl(filter);
     final url = UrlBuilder.withCorsProxy(fundaUrl);
 
@@ -40,8 +41,8 @@ class FundaScraperService implements ScraperService {
 
       if (hrefMatch != null) {
         final href = hrefMatch.group(1) ?? '';
-        detailUrl = href.startsWith('http') 
-            ? href 
+        detailUrl = href.startsWith('http')
+            ? href
             : '${AppConstants.fundaBaseUrl}$href';
       } else {
         continue;
@@ -89,9 +90,10 @@ class FundaScraperService implements ScraperService {
         // Get the second image (skip the logo)
         if (detailImages.length > 1) {
           final img = detailImages.elementAt(1);
-          return img.attributes['src'] ?? 
-                 img.attributes['data-src'] ?? 
-                 img.attributes['data-lazy-src'] ?? '';
+          return img.attributes['src'] ??
+              img.attributes['data-src'] ??
+              img.attributes['data-lazy-src'] ??
+              '';
         }
       }
     } catch (e) {

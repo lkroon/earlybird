@@ -10,8 +10,10 @@ void main() {
       final url = UrlBuilder.buildFundaUrl(filter);
 
       expect(url, contains('https://www.funda.nl/zoeken/koop'));
-      expect(url, contains('selected_area=%5B%22soest%22%5D')); // encoded ["soest"]
-      expect(url, contains('object_type=%5B%22house%22%5D')); // encoded ["house"]
+      expect(url,
+          contains('selected_area=%5B%22soest%22%5D')); // encoded ["soest"]
+      expect(
+          url, contains('object_type=%5B%22house%22%5D')); // encoded ["house"]
       expect(url, contains('publication_date=%2230%22')); // encoded "30"
       expect(url, contains('sort=%22date_down%22')); // encoded "date_down"
     });

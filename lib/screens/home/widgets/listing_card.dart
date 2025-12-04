@@ -37,7 +37,7 @@ class ListingCard extends StatelessWidget {
               );
             },
           ),
-          
+
           // Listing details
           Padding(
             padding: const EdgeInsets.all(12.0),
@@ -53,7 +53,7 @@ class ListingCard extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                
+
                 // Content/description
                 if (listing.content.isNotEmpty)
                   Text(
@@ -63,7 +63,7 @@ class ListingCard extends StatelessWidget {
                       color: Colors.grey,
                     ),
                   ),
-                
+
                 // URL link
                 if (listing.url.isNotEmpty)
                   InkWell(

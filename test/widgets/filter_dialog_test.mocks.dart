@@ -31,18 +31,18 @@ import 'package:mockito/mockito.dart' as _i1;
 class _FakeScraperService_0 extends _i1.SmartFake
     implements _i2.ScraperService {
   _FakeScraperService_0(Object parent, Invocation parentInvocation)
-    : super(parent, parentInvocation);
+      : super(parent, parentInvocation);
 }
 
 class _FakeImageLoaderService_1 extends _i1.SmartFake
     implements _i3.ImageLoaderService {
   _FakeImageLoaderService_1(Object parent, Invocation parentInvocation)
-    : super(parent, parentInvocation);
+      : super(parent, parentInvocation);
 }
 
 class _FakeSearchFilter_2 extends _i1.SmartFake implements _i4.SearchFilter {
   _FakeSearchFilter_2(Object parent, Invocation parentInvocation)
-    : super(parent, parentInvocation);
+      : super(parent, parentInvocation);
 }
 
 /// A class which mocks [ListingsProvider].
@@ -54,34 +54,28 @@ class MockListingsProvider extends _i1.Mock implements _i5.ListingsProvider {
   }
 
   @override
-  _i2.ScraperService get scraperService =>
-      (super.noSuchMethod(
-            Invocation.getter(#scraperService),
-            returnValue: _FakeScraperService_0(
-              this,
-              Invocation.getter(#scraperService),
-            ),
-          )
-          as _i2.ScraperService);
+  _i2.ScraperService get scraperService => (super.noSuchMethod(
+        Invocation.getter(#scraperService),
+        returnValue: _FakeScraperService_0(
+          this,
+          Invocation.getter(#scraperService),
+        ),
+      ) as _i2.ScraperService);
 
   @override
-  _i3.ImageLoaderService get imageLoaderService =>
-      (super.noSuchMethod(
-            Invocation.getter(#imageLoaderService),
-            returnValue: _FakeImageLoaderService_1(
-              this,
-              Invocation.getter(#imageLoaderService),
-            ),
-          )
-          as _i3.ImageLoaderService);
+  _i3.ImageLoaderService get imageLoaderService => (super.noSuchMethod(
+        Invocation.getter(#imageLoaderService),
+        returnValue: _FakeImageLoaderService_1(
+          this,
+          Invocation.getter(#imageLoaderService),
+        ),
+      ) as _i3.ImageLoaderService);
 
   @override
-  List<_i6.Listing> get listings =>
-      (super.noSuchMethod(
-            Invocation.getter(#listings),
-            returnValue: <_i6.Listing>[],
-          )
-          as List<_i6.Listing>);
+  List<_i6.Listing> get listings => (super.noSuchMethod(
+        Invocation.getter(#listings),
+        returnValue: <_i6.Listing>[],
+      ) as List<_i6.Listing>);
 
   @override
   bool get isLoading =>
@@ -99,15 +93,13 @@ class MockListingsProvider extends _i1.Mock implements _i5.ListingsProvider {
           as bool);
 
   @override
-  _i4.SearchFilter get currentFilter =>
-      (super.noSuchMethod(
-            Invocation.getter(#currentFilter),
-            returnValue: _FakeSearchFilter_2(
-              this,
-              Invocation.getter(#currentFilter),
-            ),
-          )
-          as _i4.SearchFilter);
+  _i4.SearchFilter get currentFilter => (super.noSuchMethod(
+        Invocation.getter(#currentFilter),
+        returnValue: _FakeSearchFilter_2(
+          this,
+          Invocation.getter(#currentFilter),
+        ),
+      ) as _i4.SearchFilter);
 
   @override
   bool get hasListeners =>
@@ -115,70 +107,61 @@ class MockListingsProvider extends _i1.Mock implements _i5.ListingsProvider {
           as bool);
 
   @override
-  _i7.Future<void> fetchListings() =>
-      (super.noSuchMethod(
-            Invocation.method(#fetchListings, []),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
-          )
-          as _i7.Future<void>);
+  _i7.Future<void> fetchListings() => (super.noSuchMethod(
+        Invocation.method(#fetchListings, []),
+        returnValue: _i7.Future<void>.value(),
+        returnValueForMissingStub: _i7.Future<void>.value(),
+      ) as _i7.Future<void>);
 
   @override
-  _i7.Future<void> loadMore() =>
-      (super.noSuchMethod(
-            Invocation.method(#loadMore, []),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
-          )
-          as _i7.Future<void>);
+  _i7.Future<void> loadMore() => (super.noSuchMethod(
+        Invocation.method(#loadMore, []),
+        returnValue: _i7.Future<void>.value(),
+        returnValueForMissingStub: _i7.Future<void>.value(),
+      ) as _i7.Future<void>);
 
   @override
   _i7.Future<void> updateFilter(_i4.SearchFilter? newFilter) =>
       (super.noSuchMethod(
-            Invocation.method(#updateFilter, [newFilter]),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
-          )
-          as _i7.Future<void>);
+        Invocation.method(#updateFilter, [newFilter]),
+        returnValue: _i7.Future<void>.value(),
+        returnValueForMissingStub: _i7.Future<void>.value(),
+      ) as _i7.Future<void>);
 
   @override
-  bool shouldLoadMore(int? currentItemIndex) =>
-      (super.noSuchMethod(
-            Invocation.method(#shouldLoadMore, [currentItemIndex]),
-            returnValue: false,
-          )
-          as bool);
+  bool shouldLoadMore(int? currentItemIndex) => (super.noSuchMethod(
+        Invocation.method(#shouldLoadMore, [currentItemIndex]),
+        returnValue: false,
+      ) as bool);
 
   @override
-  _i7.Future<void> refresh() =>
-      (super.noSuchMethod(
-            Invocation.method(#refresh, []),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
-          )
-          as _i7.Future<void>);
+  _i7.Future<void> refresh() => (super.noSuchMethod(
+        Invocation.method(#refresh, []),
+        returnValue: _i7.Future<void>.value(),
+        returnValueForMissingStub: _i7.Future<void>.value(),
+      ) as _i7.Future<void>);
 
   @override
   void addListener(_i8.VoidCallback? listener) => super.noSuchMethod(
-    Invocation.method(#addListener, [listener]),
-    returnValueForMissingStub: null,
-  );
+        Invocation.method(#addListener, [listener]),
+        returnValueForMissingStub: null,
+      );
 
   @override
   void removeListener(_i8.VoidCallback? listener) => super.noSuchMethod(
-    Invocation.method(#removeListener, [listener]),
-    returnValueForMissingStub: null,
-  );
+        Invocation.method(#removeListener, [listener]),
+        returnValueForMissingStub: null,
+      );
 
   @override
   void dispose() => super.noSuchMethod(
-    Invocation.method(#dispose, []),
-    returnValueForMissingStub: null,
-  );
+        Invocation.method(#dispose, []),
+        returnValueForMissingStub: null,
+      );
 
   @override
   void notifyListeners() => super.noSuchMethod(
-    Invocation.method(#notifyListeners, []),
-    returnValueForMissingStub: null,
-  );
+        Invocation.method(#notifyListeners, []),
+        returnValueForMissingStub: null,
+      );
 }

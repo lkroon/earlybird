@@ -37,7 +37,7 @@ void main() {
       // Note: Since we can't easily inject the HTTP client into the service,
       // this test demonstrates the structure. In a real scenario, you'd refactor
       // FundaScraperService to accept an http.Client in its constructor.
-      
+
       // For now, we'll test the parsing logic would work if HTTP returned this
       expect(mockHtml, contains('Test House 1'));
       expect(mockHtml, contains('Test House 2'));
@@ -52,7 +52,7 @@ void main() {
       // This is a conceptual test - the actual implementation filters URLs
       const detailUrl = '/koop/detail/soest/huis-123/';
       const nonDetailUrl = '/koop/soest/';
-      
+
       expect(detailUrl, contains('/detail/'));
       expect(nonDetailUrl, isNot(contains('/detail/')));
     });
@@ -65,7 +65,7 @@ void main() {
     test('fetchListingHeadings extracts href correctly', () {
       const innerHtml = '<a href="/koop/detail/soest/huis-123/">Test</a>';
       final hrefMatch = RegExp(r'href="([^"]+)"').firstMatch(innerHtml);
-      
+
       expect(hrefMatch, isNotNull);
       expect(hrefMatch!.group(1), '/koop/detail/soest/huis-123/');
     });
@@ -73,7 +73,7 @@ void main() {
     test('fetchListingHeadings truncates long content', () {
       final longContent = 'a' * 250;
       final truncated = longContent.substring(0, 200);
-      
+
       expect(truncated.length, 200);
       expect(longContent.length, 250);
     });

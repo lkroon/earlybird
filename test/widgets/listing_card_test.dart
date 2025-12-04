@@ -27,7 +27,8 @@ void main() {
       expect(find.byType(Image), findsOneWidget);
     });
 
-    testWidgets('does not display listing without image', (WidgetTester tester) async {
+    testWidgets('does not display listing without image',
+        (WidgetTester tester) async {
       final listing = Listing(
         title: 'House Without Image',
         content: 'Description',
@@ -47,7 +48,8 @@ void main() {
       expect(find.byType(Card), findsNothing);
     });
 
-    testWidgets('displays all listing information', (WidgetTester tester) async {
+    testWidgets('displays all listing information',
+        (WidgetTester tester) async {
       final listing = Listing(
         title: 'Test Title',
         content: 'Test Content',
@@ -68,7 +70,8 @@ void main() {
       expect(find.text('https://test.com'), findsOneWidget);
     });
 
-    testWidgets('shows error icon when image fails to load', (WidgetTester tester) async {
+    testWidgets('shows error icon when image fails to load',
+        (WidgetTester tester) async {
       final listing = Listing(
         title: 'House',
         content: 'Description',
@@ -89,10 +92,12 @@ void main() {
       expect(imageFinder, findsOneWidget);
 
       // The error builder should show a broken image icon
-      expect(find.byIcon(Icons.broken_image), findsNothing); // Won't trigger without actual error
+      expect(find.byIcon(Icons.broken_image),
+          findsNothing); // Won't trigger without actual error
     });
 
-    testWidgets('card has correct padding and margin', (WidgetTester tester) async {
+    testWidgets('card has correct padding and margin',
+        (WidgetTester tester) async {
       final listing = Listing(
         title: 'House',
         content: 'Description',
@@ -112,7 +117,8 @@ void main() {
       expect(card.margin, const EdgeInsets.only(bottom: 16.0));
     });
 
-    testWidgets('displays image with correct dimensions', (WidgetTester tester) async {
+    testWidgets('displays image with correct dimensions',
+        (WidgetTester tester) async {
       final listing = Listing(
         title: 'House',
         content: 'Description',
@@ -215,7 +221,8 @@ void main() {
       expect(find.text('Description'), findsOneWidget);
     });
 
-    testWidgets('handles empty content gracefully', (WidgetTester tester) async {
+    testWidgets('handles empty content gracefully',
+        (WidgetTester tester) async {
       final listing = Listing(
         title: 'House',
         content: '',

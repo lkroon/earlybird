@@ -31,8 +31,8 @@ class _FilterDialogState extends State<FilterDialog> {
 
   void _saveAndRefresh() {
     final updatedFilter = _tempFilter.copyWith(
-      area: _areaController.text.trim().isNotEmpty 
-          ? _areaController.text.trim() 
+      area: _areaController.text.trim().isNotEmpty
+          ? _areaController.text.trim()
           : 'soest',
     );
     context.read<ListingsProvider>().updateFilter(updatedFilter);
@@ -111,7 +111,8 @@ class _FilterDialogState extends State<FilterDialog> {
             const SizedBox(height: 8),
             TextField(
               enabled: false,
-              controller: TextEditingController(text: _tempFilter.publicationDate),
+              controller:
+                  TextEditingController(text: _tempFilter.publicationDate),
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 contentPadding: EdgeInsets.symmetric(

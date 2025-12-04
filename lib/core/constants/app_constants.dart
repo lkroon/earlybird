@@ -7,8 +7,10 @@ class AppConstants {
 
   // HTTP Headers
   static const Map<String, String> defaultHeaders = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+    'User-Agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    'Accept':
+        'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
     'Accept-Language': 'en-US,en;q=0.5',
   };
 
@@ -19,5 +21,6 @@ class AppConstants {
   // Pagination
   static const int initialBatchSize = 10;
   static const int subsequentBatchSize = 5;
-  static const int loadMoreThreshold = 5; // Load more when within 5 items of end
+  static const int loadMoreThreshold =
+      5; // Load more when within 5 items of end
 }

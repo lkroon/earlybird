@@ -21,7 +21,7 @@ class ImageLoaderService {
     for (var i = startIndex; i < endIndex; i++) {
       final heading = headings[i];
       final detailUrl = heading['url'] ?? '';
-      
+
       // Fetch the image
       final imageUrl = await scraperService.fetchListingImage(detailUrl);
 
@@ -38,8 +38,8 @@ class ImageLoaderService {
 
   /// Returns the appropriate batch size based on whether it's the first load
   int getBatchSize(bool isFirstBatch) {
-    return isFirstBatch 
-        ? AppConstants.initialBatchSize 
+    return isFirstBatch
+        ? AppConstants.initialBatchSize
         : AppConstants.subsequentBatchSize;
   }
 }

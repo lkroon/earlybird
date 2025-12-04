@@ -16,7 +16,7 @@ void main() {
 
     setUp(() {
       mockProvider = MockListingsProvider();
-      
+
       // Default mock behavior
       when(mockProvider.isLoading).thenReturn(false);
       when(mockProvider.isLoadingMore).thenReturn(false);
@@ -37,7 +37,8 @@ void main() {
       );
     }
 
-    testWidgets('shows loading indicator when isLoading is true', (WidgetTester tester) async {
+    testWidgets('shows loading indicator when isLoading is true',
+        (WidgetTester tester) async {
       when(mockProvider.isLoading).thenReturn(true);
 
       await tester.pumpWidget(createHomeScreen());
@@ -46,7 +47,8 @@ void main() {
       expect(find.text('No listings found'), findsNothing);
     });
 
-    testWidgets('shows "No listings found" when list is empty', (WidgetTester tester) async {
+    testWidgets('shows "No listings found" when list is empty',
+        (WidgetTester tester) async {
       when(mockProvider.isLoading).thenReturn(false);
       when(mockProvider.listings).thenReturn([]);
 
@@ -81,7 +83,8 @@ void main() {
       expect(find.text('House 2'), findsOneWidget);
     });
 
-    testWidgets('shows loading indicator at bottom when isLoadingMore is true', (WidgetTester tester) async {
+    testWidgets('shows loading indicator at bottom when isLoadingMore is true',
+        (WidgetTester tester) async {
       final mockListings = [
         Listing(
           title: 'House 1',
@@ -107,7 +110,8 @@ void main() {
       expect(find.byIcon(Icons.filter_list), findsOneWidget);
     });
 
-    testWidgets('refresh button calls provider.refresh()', (WidgetTester tester) async {
+    testWidgets('refresh button calls provider.refresh()',
+        (WidgetTester tester) async {
       await tester.pumpWidget(createHomeScreen());
 
       await tester.tap(find.byIcon(Icons.refresh));
@@ -148,7 +152,8 @@ void main() {
       expect(listView.padding, const EdgeInsets.all(16.0));
     });
 
-    testWidgets('itemCount includes loading indicator when isLoadingMore', (WidgetTester tester) async {
+    testWidgets('itemCount includes loading indicator when isLoadingMore',
+        (WidgetTester tester) async {
       final mockListings = List.generate(
         5,
         (i) => Listing(
@@ -171,15 +176,16 @@ void main() {
       expect(listView.semanticChildCount, 6);
     });
 
-    testWidgets('scroll controller is disposed properly', (WidgetTester tester) async {
+    testWidgets('scroll controller is disposed properly',
+        (WidgetTester tester) async {
       await tester.pumpWidget(createHomeScreen());
-      
+
       // This ensures the widget builds and scroll controller is created
       expect(find.byType(HomeScreen), findsOneWidget);
-      
+
       // Dispose the widget
       await tester.pumpWidget(Container());
-      
+
       // If scroll controller wasn't disposed, this would cause issues
       expect(find.byType(HomeScreen), findsNothing);
     });

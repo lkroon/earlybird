@@ -34,38 +34,34 @@ class MockScraperService extends _i1.Mock implements _i2.ScraperService {
   }
 
   @override
-  String get serviceName =>
-      (super.noSuchMethod(
-            Invocation.getter(#serviceName),
-            returnValue: _i3.dummyValue<String>(
-              this,
-              Invocation.getter(#serviceName),
-            ),
-          )
-          as String);
+  String get serviceName => (super.noSuchMethod(
+        Invocation.getter(#serviceName),
+        returnValue: _i3.dummyValue<String>(
+          this,
+          Invocation.getter(#serviceName),
+        ),
+      ) as String);
 
   @override
   _i4.Future<List<Map<String, String>>> fetchListingHeadings(
     _i5.SearchFilter? filter,
   ) =>
       (super.noSuchMethod(
-            Invocation.method(#fetchListingHeadings, [filter]),
-            returnValue: _i4.Future<List<Map<String, String>>>.value(
-              <Map<String, String>>[],
-            ),
-          )
-          as _i4.Future<List<Map<String, String>>>);
+        Invocation.method(#fetchListingHeadings, [filter]),
+        returnValue: _i4.Future<List<Map<String, String>>>.value(
+          <Map<String, String>>[],
+        ),
+      ) as _i4.Future<List<Map<String, String>>>);
 
   @override
   _i4.Future<String> fetchListingImage(String? detailUrl) =>
       (super.noSuchMethod(
+        Invocation.method(#fetchListingImage, [detailUrl]),
+        returnValue: _i4.Future<String>.value(
+          _i3.dummyValue<String>(
+            this,
             Invocation.method(#fetchListingImage, [detailUrl]),
-            returnValue: _i4.Future<String>.value(
-              _i3.dummyValue<String>(
-                this,
-                Invocation.method(#fetchListingImage, [detailUrl]),
-              ),
-            ),
-          )
-          as _i4.Future<String>);
+          ),
+        ),
+      ) as _i4.Future<String>);
 }

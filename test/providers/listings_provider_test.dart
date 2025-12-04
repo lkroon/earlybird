@@ -28,8 +28,7 @@ void main() {
     });
 
     test('fetchListings updates loading state', () async {
-      when(mockScraper.fetchListingHeadings(any))
-          .thenAnswer((_) async => []);
+      when(mockScraper.fetchListingHeadings(any)).thenAnswer((_) async => []);
 
       final loadingStates = <bool>[];
       provider.addListener(() {
@@ -91,8 +90,7 @@ void main() {
     });
 
     test('loadMore does nothing when already loading', () async {
-      when(mockScraper.fetchListingHeadings(any))
-          .thenAnswer((_) async => []);
+      when(mockScraper.fetchListingHeadings(any)).thenAnswer((_) async => []);
 
       await provider.fetchListings();
 
@@ -109,8 +107,7 @@ void main() {
     });
 
     test('loadMore does nothing when no more items', () async {
-      when(mockScraper.fetchListingHeadings(any))
-          .thenAnswer((_) async => []);
+      when(mockScraper.fetchListingHeadings(any)).thenAnswer((_) async => []);
 
       await provider.fetchListings();
 
@@ -144,8 +141,7 @@ void main() {
     });
 
     test('updateFilter changes filter and refetches', () async {
-      when(mockScraper.fetchListingHeadings(any))
-          .thenAnswer((_) async => []);
+      when(mockScraper.fetchListingHeadings(any)).thenAnswer((_) async => []);
 
       final newFilter = SearchFilter(area: 'amsterdam');
       await provider.updateFilter(newFilter);
@@ -155,8 +151,7 @@ void main() {
     });
 
     test('refresh calls fetchListings', () async {
-      when(mockScraper.fetchListingHeadings(any))
-          .thenAnswer((_) async => []);
+      when(mockScraper.fetchListingHeadings(any)).thenAnswer((_) async => []);
 
       await provider.refresh();
 
@@ -188,8 +183,7 @@ void main() {
     });
 
     test('notifies listeners on state changes', () async {
-      when(mockScraper.fetchListingHeadings(any))
-          .thenAnswer((_) async => []);
+      when(mockScraper.fetchListingHeadings(any)).thenAnswer((_) async => []);
 
       var notificationCount = 0;
       provider.addListener(() {

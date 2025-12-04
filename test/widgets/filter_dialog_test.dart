@@ -17,7 +17,7 @@ void main() {
 
     setUp(() {
       mockProvider = MockListingsProvider();
-      
+
       // Default mock behavior
       when(mockProvider.currentFilter).thenReturn(SearchFilter());
       when(mockProvider.updateFilter(any)).thenAnswer((_) async => {});
@@ -49,7 +49,10 @@ void main() {
 
       final areaField = tester.widget<TextField>(
         find.byWidgetPredicate(
-          (widget) => widget is TextField && widget.enabled != false && widget.decoration?.hintText != null,
+          (widget) =>
+              widget is TextField &&
+              widget.enabled != false &&
+              widget.decoration?.hintText != null,
         ),
       );
 
@@ -65,7 +68,8 @@ void main() {
         ),
       );
 
-      expect(disabledFields.length, 3); // objectType, publicationDate, sortOrder
+      expect(
+          disabledFields.length, 3); // objectType, publicationDate, sortOrder
     });
 
     testWidgets('has save and discard buttons', (WidgetTester tester) async {
@@ -75,7 +79,8 @@ void main() {
       expect(find.text('Discard'), findsOneWidget);
     });
 
-    testWidgets('discard button closes dialog without saving', (WidgetTester tester) async {
+    testWidgets('discard button closes dialog without saving',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         ChangeNotifierProvider<ListingsProvider>.value(
           value: mockProvider,
@@ -109,7 +114,8 @@ void main() {
       verifyNever(mockProvider.updateFilter(any));
     });
 
-    testWidgets('save button updates filter and closes dialog', (WidgetTester tester) async {
+    testWidgets('save button updates filter and closes dialog',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         ChangeNotifierProvider<ListingsProvider>.value(
           value: mockProvider,
@@ -137,7 +143,10 @@ void main() {
       // Change area text
       await tester.enterText(
         find.byWidgetPredicate(
-          (widget) => widget is TextField && widget.enabled != false && widget.decoration?.hintText != null,
+          (widget) =>
+              widget is TextField &&
+              widget.enabled != false &&
+              widget.decoration?.hintText != null,
         ),
         'amsterdam',
       );
@@ -164,14 +173,16 @@ void main() {
 
       final areaField = tester.widget<TextField>(
         find.byWidgetPredicate(
-          (widget) => widget is TextField && widget.decoration?.hintText != null,
+          (widget) =>
+              widget is TextField && widget.decoration?.hintText != null,
         ),
       );
 
       expect(areaField.decoration?.hintText, contains('soest'));
     });
 
-    testWidgets('disabled fields have grey background', (WidgetTester tester) async {
+    testWidgets('disabled fields have grey background',
+        (WidgetTester tester) async {
       await tester.pumpWidget(createFilterDialog());
 
       final disabledFields = tester.widgetList<TextField>(
@@ -213,7 +224,10 @@ void main() {
       // Clear the area field
       await tester.enterText(
         find.byWidgetPredicate(
-          (widget) => widget is TextField && widget.enabled != false && widget.decoration?.hintText != null,
+          (widget) =>
+              widget is TextField &&
+              widget.enabled != false &&
+              widget.decoration?.hintText != null,
         ),
         '',
       );

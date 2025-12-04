@@ -21,7 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    
+
     // Fetch initial data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ListingsProvider>().fetchListings();
@@ -38,16 +38,17 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!_scrollController.hasClients) return;
 
     final provider = context.read<ListingsProvider>();
-    
+
     // Calculate approximate current index based on scroll position
     final maxScroll = _scrollController.position.maxScrollExtent;
     final currentScroll = _scrollController.position.pixels;
     final viewportDimension = _scrollController.position.viewportDimension;
     final totalScrollable = maxScroll + viewportDimension;
-    
+
     if (totalScrollable > 0) {
-      final approximateIndex = (currentScroll / totalScrollable * provider.listings.length).floor();
-      
+      final approximateIndex =
+          (currentScroll / totalScrollable * provider.listings.length).floor();
+
       // Trigger load more when needed
       if (provider.shouldLoadMore(approximateIndex)) {
         provider.loadMore();
@@ -79,7 +80,8 @@ class _HomeScreenState extends State<HomeScreen> {
           return ListView.builder(
             controller: _scrollController,
             padding: const EdgeInsets.all(16.0),
-            itemCount: provider.listings.length + (provider.isLoadingMore ? 1 : 0),
+            itemCount:
+                provider.listings.length + (provider.isLoadingMore ? 1 : 0),
             itemBuilder: (context, index) {
               // Show loading indicator at the end
               if (index >= provider.listings.length) {
