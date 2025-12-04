@@ -1,22 +1,20 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
-import 'package:mockito/mockito.dart';
 import 'package:http/http.dart' as http;
 import 'package:earlybird/services/funda_scraper_service.dart';
 import 'package:earlybird/models/search_filter.dart';
 
 // This will generate mocks. Run: dart run build_runner build
 @GenerateMocks([http.Client])
+// ignore: unused_import
 import 'funda_scraper_service_test.mocks.dart';
 
 void main() {
   group('FundaScraperService Tests', () {
     late FundaScraperService service;
-    late MockClient mockClient;
 
     setUp(() {
       service = FundaScraperService();
-      mockClient = MockClient();
     });
 
     test('serviceName returns "Funda"', () {

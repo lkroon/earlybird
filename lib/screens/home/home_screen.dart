@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/listings_provider.dart';
 import '../../core/theme/app_theme.dart';
 import 'widgets/listing_card.dart';
+import 'widgets/filter_dialog.dart';
 
 /// Home screen displaying real estate listings
 class HomeScreen extends StatefulWidget {
@@ -96,12 +97,30 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          context.read<ListingsProvider>().refresh();
-        },
-        tooltip: 'Refresh',
-        child: const Icon(Icons.refresh),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            heroTag: 'filter',
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => const FilterDialog(),
+              );
+            },
+            tooltip: 'Filters',
+            child: const Icon(Icons.filter_list),
+          ),
+          const SizedBox(height: 16),
+          FloatingActionButton(
+            heroTag: 'refresh',
+            onPressed: () {
+              context.read<ListingsProvider>().refresh();
+            },
+            tooltip: 'Refresh',
+            child: const Icon(Icons.refresh),
+          ),
+        ],
       ),
     );
   }

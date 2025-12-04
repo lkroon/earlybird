@@ -3,7 +3,6 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:earlybird/services/image_loader_service.dart';
 import 'package:earlybird/services/scraper_service.dart';
-import 'package:earlybird/models/listing.dart';
 import 'package:earlybird/core/constants/app_constants.dart';
 
 @GenerateMocks([ScraperService])

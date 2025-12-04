@@ -102,14 +102,15 @@ void main() {
     testWidgets('has refresh button', (WidgetTester tester) async {
       await tester.pumpWidget(createHomeScreen());
 
-      expect(find.byType(FloatingActionButton), findsOneWidget);
+      expect(find.byType(FloatingActionButton), findsNWidgets(2));
       expect(find.byIcon(Icons.refresh), findsOneWidget);
+      expect(find.byIcon(Icons.filter_list), findsOneWidget);
     });
 
     testWidgets('refresh button calls provider.refresh()', (WidgetTester tester) async {
       await tester.pumpWidget(createHomeScreen());
 
-      await tester.tap(find.byType(FloatingActionButton));
+      await tester.tap(find.byIcon(Icons.refresh));
       await tester.pump();
 
       verify(mockProvider.refresh()).called(1);
