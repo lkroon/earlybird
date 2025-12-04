@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' as html_parser;
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 void main() {
   runApp(const MyApp());
@@ -58,24 +59,53 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   List<Map<String, String>> _listings = [];
+  List<Map<String, String>> _allHeadings = []; // Store all headings
   bool _isLoading = true;
+  bool _isLoadingMore = false;
+  int _currentIndex = 0;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     _fetchData();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.hasClients) {
+      // Calculate approximate current index based on scroll position
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      final currentScroll = _scrollController.position.pixels;
+      final approximateIndex = (currentScroll / (maxScroll + _scrollController.position.viewportDimension) * _listings.length).floor();
+      
+      // Trigger load more when viewing item at index (listings.length - 5) or beyond
+      if (approximateIndex >= _listings.length - 5) {
+        if (!_isLoadingMore && _currentIndex < _allHeadings.length) {
+          _loadMore();
+        }
+      }
+    }
   }
 
   Future<void> _fetchData() async {
     setState(() {
       _isLoading = true;
       _listings = [];
+      _allHeadings = [];
+      _currentIndex = 0;
     });
-    
+
     try {
       final fundaUrl = 'https://www.funda.nl/zoeken/koop?selected_area=[%22soest%22]&object_type=[%22house%22]&publication_date="30"&sort="date_down"';
       final url = 'https://corsproxy.io/?${Uri.encodeComponent(fundaUrl)}';
-      
+
       final response = await http.get(
         Uri.parse(url),
         headers: {
@@ -84,77 +114,57 @@ class _MyHomePageState extends State<MyHomePage> {
           'Accept-Language': 'en-US,en;q=0.5',
         },
       );
-      
+
       if (response.statusCode == 200) {
         // Parse HTML for Funda
         final document = html_parser.parse(response.body);
-          
+
         // Get all headings with their following content
-        final listings = <Map<String, String>>[];
-        final allHeadings = document.querySelectorAll('h1, h2, h3, h4').take(30);
-          
+        final allHeadings = document.querySelectorAll('h1, h2, h3, h4');
+
+        // Extract heading data without fetching images yet
         for (var heading in allHeadings) {
           final headingText = heading.text.trim();
           if (headingText.isEmpty) continue;
-            
+
           // Extract href from innerHtml
           final innerHtml = heading.innerHtml;
           final hrefMatch = RegExp(r'href="([^"]+)"').firstMatch(innerHtml);
           var detailUrl = '';
-          var imageUrl = '';
-            
+
           if (hrefMatch != null) {
             final href = hrefMatch.group(1) ?? '';
             detailUrl = href.startsWith('http') ? href : 'https://www.funda.nl$href';
-              
-            // Fetch the detail page to get the image
-            if (detailUrl.contains('/detail/')) {
-              try {
-                final detailResponse = await http.get(
-                  Uri.parse('https://corsproxy.io/?${Uri.encodeComponent(detailUrl)}'),
-                  headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                  },
-                );
-                  
-                if (detailResponse.statusCode == 200) {
-                  final detailDoc = html_parser.parse(detailResponse.body);
-                  final detailImages = detailDoc.querySelectorAll('img');
-                  
-                  // Get the second image (skip the logo)
-                  if (detailImages.length > 1) {
-                    final img = detailImages.elementAt(1);
-                    imageUrl = img.attributes['src'] ?? 
-                              img.attributes['data-src'] ?? 
-                              img.attributes['data-lazy-src'] ?? '';
-                  }
-                }
-              } catch (e) {
-                print('Error fetching detail page: $e');
-              }
-            }
+          } else {
+            continue;
           }
-            
+
           // Try to get the next sibling text or parent's next content
           var nextContent = '';
           var nextElement = heading.nextElementSibling;
           if (nextElement != null) {
             nextContent = nextElement.text.trim();
-            if (nextContent.length > 200) nextContent = nextContent.substring(0, 200);
+            if (nextContent.length > 200) {
+              nextContent = nextContent.substring(0, 200);
+            }
           }
-          
-          listings.add({
-            'title': headingText,
-            'content': nextContent,
-            'url': detailUrl,
-            'image': imageUrl,
-          });
+
+          if (detailUrl.contains('/detail/')) {
+            _allHeadings.add({
+              'title': headingText,
+              'content': nextContent,
+              'url': detailUrl,
+              'image': '', // Will be loaded later
+            });
+          }
         }
-        
+
         setState(() {
-          _listings = listings;
           _isLoading = false;
         });
+
+        // Load first batch
+        await _loadMore();
       }
     } catch (e) {
       setState(() {
@@ -164,23 +174,99 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  Future<void> _loadMore() async {
+    if (_isLoadingMore || _currentIndex >= _allHeadings.length) return;
+
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    try {
+      final batchSize = _currentIndex == 0 ? 10 : 5;
+      final endIndex = (_currentIndex + batchSize).clamp(0, _allHeadings.length);
+      final newListings = <Map<String, String>>[];
+
+      for (var i = _currentIndex; i < endIndex; i++) {
+        final heading = _allHeadings[i];
+        final detailUrl = heading['url'] ?? '';
+        var imageUrl = '';
+
+        // Fetch the detail page to get the image
+        if (detailUrl.isNotEmpty) {
+          try {
+            final detailResponse = await http.get(
+              Uri.parse('https://corsproxy.io/?${Uri.encodeComponent(detailUrl)}'),
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+              },
+            );
+
+            if (detailResponse.statusCode == 200) {
+              final detailDoc = html_parser.parse(detailResponse.body);
+              final detailImages = detailDoc.querySelectorAll('img');
+
+              // Get the second image (skip the logo)
+              if (detailImages.length > 1) {
+                final img = detailImages.elementAt(1);
+                imageUrl = img.attributes['src'] ?? img.attributes['data-src'] ?? img.attributes['data-lazy-src'] ?? '';
+              }
+            }
+          } catch (e) {
+            print('Error fetching detail page: $e');
+          }
+        }
+
+        newListings.add({
+          'title': heading['title'] ?? '',
+          'content': heading['content'] ?? '',
+          'url': detailUrl,
+          'image': imageUrl,
+        });
+      }
+
+      setState(() {
+        _listings.addAll(newListings);
+        _currentIndex = endIndex;
+        _isLoadingMore = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingMore = false;
+      });
+    }
+  }
+
 
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
+        backgroundColor: const Color(0xFFF7A100),
+        title: SvgPicture.asset(
+          'assets/funda-logo-blue.svg',
+          height: 30,
+        ),
+        centerTitle: true,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _listings.isEmpty
+          : _listings.isEmpty && !_isLoadingMore
               ? const Center(child: Text('No listings found'))
               : ListView.builder(
+                  controller: _scrollController,
                   padding: const EdgeInsets.all(16.0),
-                  itemCount: _listings.length,
+                  itemCount: _listings.length + (_isLoadingMore ? 1 : 0),
                   itemBuilder: (context, index) {
+                    if (index >= _listings.length) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    }
+
                     final listing = _listings[index];
                     if (listing['image']?.isEmpty ?? true) return const SizedBox.shrink();
                     
