@@ -31,7 +31,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed documentation.
 
 ### Prerequisites
 
-- Flutter SDK 3.10.1 or higher
+- Flutter SDK 3.10.0 or higher
 - Dart SDK 3.0.0 or higher
 
 ### Installation

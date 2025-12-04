@@ -125,7 +125,7 @@ Edit the `flutter-version` in each workflow file:
 - name: Setup Flutter
   uses: subosito/flutter-action@v2
   with:
-    flutter-version: '3.10.1'  # Change this
+    flutter-version: '3.24.0'  # Change this
     channel: 'stable'
 ```
 
