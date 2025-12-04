@@ -73,6 +73,19 @@ jobs:
       - name: Build iOS (no signing)
         run: flutter build ios --release --no-codesign
 
+      - name: Create IPA
+        run: |
+          cd build/ios/iphoneos
+          mkdir Payload
+          cp -r Runner.app Payload
+          zip -r ../../../earlybird.ipa Payload
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa
+          path: earlybird.ipa
+
   build-web:
     name: Build Web
     runs-on: ubuntu-latest
