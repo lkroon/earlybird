@@ -22,6 +22,7 @@ void main() {
       when(mockProvider.isLoadingMore).thenReturn(false);
       when(mockProvider.listings).thenReturn([]);
       when(mockProvider.hasMore).thenReturn(false);
+      when(mockProvider.errorMessage).thenReturn(null);
       when(mockProvider.shouldLoadMore(any)).thenReturn(false);
       when(mockProvider.fetchListings()).thenAnswer((_) async => {});
       when(mockProvider.loadMore()).thenAnswer((_) async => {});
