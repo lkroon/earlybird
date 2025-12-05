@@ -21,6 +21,7 @@ class ListingsProvider extends ChangeNotifier {
   bool _isLoadingMore = false;
   int _currentIndex = 0;
   SearchFilter _currentFilter = SearchFilter();
+  String? _errorMessage;
 
   // Getters
   List<Listing> get listings => _listings;
@@ -28,6 +29,7 @@ class ListingsProvider extends ChangeNotifier {
   bool get isLoadingMore => _isLoadingMore;
   bool get hasMore => _currentIndex < _allHeadings.length;
   SearchFilter get currentFilter => _currentFilter;
+  String? get errorMessage => _errorMessage;
 
   /// Fetches listings with the current filter
   Future<void> fetchListings() async {
@@ -35,6 +37,7 @@ class ListingsProvider extends ChangeNotifier {
     _listings = [];
     _allHeadings = [];
     _currentIndex = 0;
+    _errorMessage = null;
     notifyListeners();
 
     try {
@@ -47,9 +50,9 @@ class ListingsProvider extends ChangeNotifier {
       await loadMore();
     } catch (e) {
       _isLoading = false;
+      _errorMessage = 'Failed to load listings: $e';
       notifyListeners();
       debugPrint('Error fetching listings: $e');
-      rethrow;
     }
   }
 
@@ -76,6 +79,7 @@ class ListingsProvider extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _isLoadingMore = false;
+      _errorMessage = 'Failed to load more listings: $e';
       notifyListeners();
       debugPrint('Error loading more listings: $e');
     }
