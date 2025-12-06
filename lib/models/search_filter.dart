@@ -25,7 +25,7 @@ class SearchFilter {
     String? sortOrder,
   }) {
     return SearchFilter(
-      area: area != null ? area : this.area,
+      area: area ?? this.area,
       objectType: objectType ?? this.objectType,
       publicationDate: publicationDate ?? this.publicationDate,
       sortOrder: sortOrder ?? this.sortOrder,
