@@ -11,7 +11,7 @@ void main() {
 
       expect(url, contains('https://www.funda.nl/zoeken/koop'));
       expect(url,
-          contains('selected_area=%5B%22soest%22%5D')); // encoded ["soest"]
+          contains('selected_area=%5B%22utrecht%22%5D')); // encoded ["utrecht"]
       expect(
           url, contains('object_type=%5B%22house%22%5D')); // encoded ["house"]
       expect(url, contains('publication_date=%2230%22')); // encoded "30"
