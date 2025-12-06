@@ -6,7 +6,7 @@ class SearchFilter {
   final String sortOrder;
 
   SearchFilter({
-    this.area = 'soest',
+    this.area = 'utrecht',
     this.objectType = 'house',
     this.publicationDate = '30',
     this.sortOrder = 'date_down',
