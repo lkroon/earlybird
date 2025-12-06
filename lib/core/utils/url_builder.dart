@@ -19,7 +19,8 @@ class UrlBuilder {
   static String withCorsProxy(String url) {
     // Add timestamp to bust cache on CORS proxy
     final separator = url.contains('?') ? '&' : '?';
-    final urlWithCacheBust = '$url${separator}_t=${DateTime.now().millisecondsSinceEpoch}';
+    final urlWithCacheBust =
+        '$url${separator}_t=${DateTime.now().millisecondsSinceEpoch}';
     return '${AppConstants.corsProxyUrl}${Uri.encodeComponent(urlWithCacheBust)}';
   }
 }
