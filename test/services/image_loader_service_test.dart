@@ -21,7 +21,7 @@ void main() {
     test('getBatchSize returns initial batch size for first batch', () {
       final size = service.getBatchSize(true);
       expect(size, AppConstants.initialBatchSize);
-      expect(size, 10);
+      expect(size, 5);
     });
 
     test('getBatchSize returns subsequent batch size for non-first batch', () {
@@ -46,10 +46,10 @@ void main() {
         },
       ];
 
-      when(mockScraper.fetchListingImage('https://example.com/1'))
-          .thenAnswer((_) async => 'https://example.com/image1.jpg');
-      when(mockScraper.fetchListingImage('https://example.com/2'))
-          .thenAnswer((_) async => 'https://example.com/image2.jpg');
+      when(mockScraper.fetchListingImages('https://example.com/1'))
+          .thenAnswer((_) async => ['https://example.com/image1.jpg']);
+      when(mockScraper.fetchListingImages('https://example.com/2'))
+          .thenAnswer((_) async => ['https://example.com/image2.jpg']);
 
       final listings = await service.loadBatch(headings, 0, 2);
 
@@ -59,8 +59,8 @@ void main() {
       expect(listings[1].title, 'House 2');
       expect(listings[1].imageUrl, 'https://example.com/image2.jpg');
 
-      verify(mockScraper.fetchListingImage('https://example.com/1')).called(1);
-      verify(mockScraper.fetchListingImage('https://example.com/2')).called(1);
+      verify(mockScraper.fetchListingImages('https://example.com/1')).called(1);
+      verify(mockScraper.fetchListingImages('https://example.com/2')).called(1);
     });
 
     test('loadBatch respects batch size limit', () async {
@@ -74,13 +74,13 @@ void main() {
         },
       );
 
-      when(mockScraper.fetchListingImage(any))
-          .thenAnswer((_) async => 'https://example.com/image.jpg');
+      when(mockScraper.fetchListingImages(any))
+          .thenAnswer((_) async => ['https://example.com/image.jpg']);
 
       final listings = await service.loadBatch(headings, 0, 5);
 
       expect(listings.length, 5);
-      verify(mockScraper.fetchListingImage(any)).called(5);
+      verify(mockScraper.fetchListingImages(any)).called(5);
     });
 
     test('loadBatch handles startIndex correctly', () async {
@@ -90,8 +90,8 @@ void main() {
         {'title': 'House 3', 'content': '', 'url': 'url3', 'image': ''},
       ];
 
-      when(mockScraper.fetchListingImage(any))
-          .thenAnswer((_) async => 'image.jpg');
+      when(mockScraper.fetchListingImages(any))
+          .thenAnswer((_) async => ['image.jpg']);
 
       final listings = await service.loadBatch(headings, 1, 2);
 
@@ -106,8 +106,8 @@ void main() {
         {'title': 'House 2', 'content': '', 'url': 'url2', 'image': ''},
       ];
 
-      when(mockScraper.fetchListingImage(any))
-          .thenAnswer((_) async => 'image.jpg');
+      when(mockScraper.fetchListingImages(any))
+          .thenAnswer((_) async => ['image.jpg']);
 
       // Request batch size of 10 but only 2 items available
       final listings = await service.loadBatch(headings, 0, 10);
@@ -125,8 +125,8 @@ void main() {
         },
       ];
 
-      when(mockScraper.fetchListingImage('https://example.com/house'))
-          .thenAnswer((_) async => 'https://example.com/house.jpg');
+      when(mockScraper.fetchListingImages('https://example.com/house'))
+          .thenAnswer((_) async => ['https://example.com/house.jpg']);
 
       final listings = await service.loadBatch(headings, 0, 1);
 
@@ -142,7 +142,7 @@ void main() {
       final listings = await service.loadBatch(headings, 0, 10);
 
       expect(listings, isEmpty);
-      verifyNever(mockScraper.fetchListingImage(any));
+      verifyNever(mockScraper.fetchListingImages(any));
     });
   });
 }

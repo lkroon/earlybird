@@ -66,6 +66,27 @@ class _HomeScreenState extends State<HomeScreen> {
           height: 30,
         ),
         centerTitle: true,
+        actions: [
+          // Show spinner when refreshing in background
+          Consumer<ListingsProvider>(
+            builder: (context, provider, child) {
+              if (provider.isRefreshing) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+        ],
       ),
       body: Consumer<ListingsProvider>(
         builder: (context, provider, child) {
@@ -143,6 +164,51 @@ class _HomeScreenState extends State<HomeScreen> {
             },
             tooltip: 'Filters',
             child: const Icon(Icons.filter_list),
+          ),
+          const SizedBox(height: 16),
+          FloatingActionButton(
+            heroTag: 'delete',
+            backgroundColor: Colors.red,
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Clear All Data'),
+                  content: const Text(
+                    'Are you sure you want to delete all cached listings? This cannot be undone.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        Navigator.of(context).pop();
+                        final provider = context.read<ListingsProvider>();
+                        await provider.clearAllCachedListings();
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('All cached data cleared'),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      },
+                      child: const Text(
+                        'Delete',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+            tooltip: 'Clear all cached data',
+            child: const Icon(Icons.delete_forever),
           ),
           const SizedBox(height: 16),
           FloatingActionButton(

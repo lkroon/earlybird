@@ -41,4 +41,9 @@ class SearchFilter {
       'sort': '"$sortOrder"',
     };
   }
+
+  /// Generates a unique key for this filter combination
+  String toKey() {
+    return '$area-$objectType-$publicationDate-$sortOrder';
+  }
 }

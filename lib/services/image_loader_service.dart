@@ -13,25 +13,50 @@ class ImageLoaderService {
   Future<List<Listing>> loadBatch(
     List<Map<String, String>> headings,
     int startIndex,
-    int batchSize,
-  ) async {
+    int batchSize, {
+    String filterKey = '',
+  }) async {
     final endIndex = (startIndex + batchSize).clamp(0, headings.length);
-    final newListings = <Listing>[];
+    final batch = headings.sublist(startIndex, endIndex);
 
-    for (var i = startIndex; i < endIndex; i++) {
-      final heading = headings[i];
+    // Fetch all images in parallel for better performance
+    final imageFutures = batch.map((heading) async {
       final detailUrl = heading['url'] ?? '';
+      final thumbnailUrl = heading['image'] ?? '';
 
-      // Fetch the image
-      final imageUrl = await scraperService.fetchListingImage(detailUrl);
+      // Fetch full image gallery from detail page
+      final detailImages = await scraperService.fetchListingImages(detailUrl);
 
-      newListings.add(Listing(
+      // If we have a thumbnail and detail images, combine them
+      // Otherwise use whatever we have
+      List<String> imageUrls;
+      if (thumbnailUrl.isNotEmpty && detailImages.isNotEmpty) {
+        // Start with thumbnail, add detail images if they're different
+        imageUrls = [thumbnailUrl];
+        for (var img in detailImages) {
+          if (img != thumbnailUrl && !imageUrls.contains(img)) {
+            imageUrls.add(img);
+          }
+        }
+      } else if (detailImages.isNotEmpty) {
+        imageUrls = detailImages;
+      } else if (thumbnailUrl.isNotEmpty) {
+        imageUrls = [thumbnailUrl];
+      } else {
+        imageUrls = [];
+      }
+
+      return Listing(
         title: heading['title'] ?? '',
         content: heading['content'] ?? '',
         url: detailUrl,
-        imageUrl: imageUrl,
-      ));
-    }
+        imageUrls: imageUrls,
+        filterKey: filterKey,
+      );
+    });
+
+    // Wait for all image fetches to complete in parallel
+    final newListings = await Future.wait(imageFutures);
 
     return newListings;
   }

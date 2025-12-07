@@ -45,8 +45,8 @@ class AppConstants {
   static const String fundaSearchPath = '/zoeken/koop';
 
   // Pagination
-  static const int initialBatchSize = 10;
+  static const int initialBatchSize = 5;
   static const int subsequentBatchSize = 5;
   static const int loadMoreThreshold =
-      5; // Load more when within 5 items of end
+      2; // Load more when within 2 items of end
 }

@@ -9,6 +9,9 @@ abstract class ScraperService {
   /// Fetches the image URL for a specific listing by visiting its detail page
   Future<String> fetchListingImage(String detailUrl);
 
+  /// Fetches all image URLs for a specific listing by visiting its detail page
+  Future<List<String>> fetchListingImages(String detailUrl);
+
   /// Returns the name of the scraper service (e.g., "Funda", "Jaap")
   String get serviceName;
 }

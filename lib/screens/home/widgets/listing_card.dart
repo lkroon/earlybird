@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:provider/provider.dart';
 import '../../../models/listing.dart';
+import '../../../providers/listings_provider.dart';
 
 /// A card widget that displays a single listing
 class ListingCard extends StatelessWidget {
@@ -21,21 +23,60 @@ class ListingCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Listing image
-          Image.network(
-            listing.imageUrl,
-            height: 200,
-            width: double.infinity,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
+          // Listing image with badge overlay
+          Stack(
+            children: [
+              Image.network(
+                listing.imageUrl,
                 height: 200,
-                color: Colors.grey[300],
-                child: const Center(
-                  child: Icon(Icons.broken_image, size: 50),
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: 200,
+                    color: Colors.grey[300],
+                    child: const Center(
+                      child: Icon(Icons.broken_image, size: 50),
+                    ),
+                  );
+                },
+              ),
+              // Badge overlay
+              Positioned(
+                top: 8,
+                left: 8,
+                child: GestureDetector(
+                  onTap: () async {
+                    final provider = Provider.of<ListingsProvider>(
+                      context,
+                      listen: false,
+                    );
+                    await provider.toggleListingViewed(listing.id);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: listing.isViewed
+                          ? Colors.grey.withOpacity(0.9)
+                          : Colors.orange.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.3),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      listing.isViewed ? Icons.visibility : Icons.priority_high,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
                 ),
-              );
-            },
+              ),
+            ],
           ),
 
           // Listing details
@@ -48,9 +89,10 @@ class ListingCard extends StatelessWidget {
                 if (listing.title.isNotEmpty)
                   Text(
                     listing.title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
+                      color: listing.isViewed ? Colors.grey : Colors.black,
                     ),
                   ),
 
@@ -58,9 +100,9 @@ class ListingCard extends StatelessWidget {
                 if (listing.content.isNotEmpty)
                   Text(
                     listing.content,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey,
+                      color: listing.isViewed ? Colors.grey[400] : Colors.grey,
                     ),
                   ),
 
@@ -80,9 +122,10 @@ class ListingCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 4.0),
                       child: Text(
                         listing.url,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 10,
-                          color: Colors.blue,
+                          color:
+                              listing.isViewed ? Colors.grey[400] : Colors.blue,
                           decoration: TextDecoration.underline,
                         ),
                       ),
