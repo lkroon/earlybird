@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../../providers/listings_provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../models/site.dart';
 import 'widgets/listing_card.dart';
 import 'widgets/filter_dialog.dart';
+import 'widgets/site_selector.dart';
 
 /// Home screen displaying real estate listings
 class HomeScreen extends StatefulWidget {
@@ -16,6 +17,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
+  Site _selectedSite = Site.funda;
 
   @override
   void initState() {
@@ -61,9 +63,20 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppTheme.fundaOrange,
-        title: SvgPicture.asset(
-          'assets/funda-logo-blue.svg',
-          height: 30,
+        title: SiteSelector(
+          selectedSite: _selectedSite,
+          onSiteChanged: (Site newSite) {
+            setState(() {
+              _selectedSite = newSite;
+            });
+            // TODO: Switch to different scraper implementation
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('${newSite.displayName} selected'),
+                duration: const Duration(seconds: 1),
+              ),
+            );
+          },
         ),
         centerTitle: true,
         actions: [

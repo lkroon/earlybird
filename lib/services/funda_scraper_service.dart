@@ -154,22 +154,44 @@ class FundaScraperService implements ScraperService {
         final detailDoc = html_parser.parse(detailResponse.body);
         final detailImages = detailDoc.querySelectorAll('img');
         final imageUrls = <String>[];
+        final thumbnailCandidates = <String>[];
 
-        // Collect all valid property images (filter by dimensions and URL)
+        // Collect all images, prioritizing valid thumbnails
         for (var img in detailImages) {
-          if (_isValidPropertyImage(img)) {
-            final imageUrl = img.attributes['src'] ??
-                img.attributes['data-src'] ??
-                img.attributes['data-lazy-src'] ??
-                '';
+          final imageUrl = img.attributes['src'] ??
+              img.attributes['data-src'] ??
+              img.attributes['data-lazy-src'] ??
+              '';
 
-            if (imageUrl.isNotEmpty) {
-              imageUrls.add(imageUrl);
-            }
+          if (imageUrl.isEmpty ||
+              imageUrl.contains('logo') ||
+              imageUrl.contains('icon') ||
+              imageUrl.contains('badge') ||
+              imageUrl.contains('button') ||
+              imageUrl.contains('avatar')) {
+            continue; // Skip obvious non-property images
+          }
+
+          // Check if it's a valid thumbnail (400x400+)
+          if (_isValidPropertyImage(img)) {
+            thumbnailCandidates.add(imageUrl);
+          }
+
+          if (!imageUrls.contains(imageUrl)) {
+            imageUrls.add(imageUrl);
           }
         }
 
-        return imageUrls;
+        // Reorder: put valid thumbnails first
+        final reorderedUrls = <String>[];
+        reorderedUrls.addAll(thumbnailCandidates);
+        for (var url in imageUrls) {
+          if (!thumbnailCandidates.contains(url)) {
+            reorderedUrls.add(url);
+          }
+        }
+
+        return reorderedUrls;
       }
     } catch (e) {
       debugPrint('Error fetching detail page images: $e');
