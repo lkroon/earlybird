@@ -10,7 +10,7 @@ void main() {
         title: 'Beautiful House',
         content: 'A great place to live',
         url: 'https://www.funda.nl/detail/123',
-        imageUrl: 'https://example.com/image.jpg',
+        imageUrls: ['https://example.com/image.jpg'],
       );
 
       await tester.pumpWidget(
@@ -33,7 +33,7 @@ void main() {
         title: 'House Without Image',
         content: 'Description',
         url: 'https://example.com',
-        imageUrl: '',
+        imageUrls: [],
       );
 
       await tester.pumpWidget(
@@ -54,7 +54,7 @@ void main() {
         title: 'Test Title',
         content: 'Test Content',
         url: 'https://test.com',
-        imageUrl: 'https://example.com/img.jpg',
+        imageUrls: ['https://example.com/img.jpg'],
       );
 
       await tester.pumpWidget(
@@ -76,7 +76,7 @@ void main() {
         title: 'House',
         content: 'Description',
         url: 'https://example.com',
-        imageUrl: 'https://invalid-url.com/image.jpg',
+        imageUrls: ['https://invalid-url.com/image.jpg'],
       );
 
       await tester.pumpWidget(
@@ -102,7 +102,7 @@ void main() {
         title: 'House',
         content: 'Description',
         url: 'https://example.com',
-        imageUrl: 'https://example.com/image.jpg',
+        imageUrls: ['https://example.com/image.jpg'],
       );
 
       await tester.pumpWidget(
@@ -123,7 +123,7 @@ void main() {
         title: 'House',
         content: 'Description',
         url: 'https://example.com',
-        imageUrl: 'https://example.com/image.jpg',
+        imageUrls: ['https://example.com/image.jpg'],
       );
 
       await tester.pumpWidget(
@@ -145,7 +145,7 @@ void main() {
         title: 'Styled House',
         content: 'Description',
         url: 'https://example.com',
-        imageUrl: 'https://example.com/image.jpg',
+        imageUrls: ['https://example.com/image.jpg'],
       );
 
       await tester.pumpWidget(
@@ -166,7 +166,7 @@ void main() {
         title: 'House',
         content: 'Styled Content',
         url: 'https://example.com',
-        imageUrl: 'https://example.com/image.jpg',
+        imageUrls: ['https://example.com/image.jpg'],
       );
 
       await tester.pumpWidget(
@@ -187,7 +187,7 @@ void main() {
         title: 'House',
         content: 'Description',
         url: 'https://example.com',
-        imageUrl: 'https://example.com/image.jpg',
+        imageUrls: ['https://example.com/image.jpg'],
       );
 
       await tester.pumpWidget(
@@ -206,7 +206,7 @@ void main() {
         title: '',
         content: 'Description',
         url: 'https://example.com',
-        imageUrl: 'https://example.com/image.jpg',
+        imageUrls: ['https://example.com/image.jpg'],
       );
 
       await tester.pumpWidget(
@@ -227,7 +227,7 @@ void main() {
         title: 'House',
         content: '',
         url: 'https://example.com',
-        imageUrl: 'https://example.com/image.jpg',
+        imageUrls: ['https://example.com/image.jpg'],
       );
 
       await tester.pumpWidget(

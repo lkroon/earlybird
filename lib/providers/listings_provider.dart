@@ -101,13 +101,13 @@ class ListingsProvider extends ChangeNotifier {
         // Get merged listings (includes cache + new)
         final mergedListings =
             storageService.mergeWithCache(newListings, filterKey);
-        
+
         // Find truly new listings (not in current _listings)
         final existingIds = _listings.map((l) => l.id).toSet();
         final trulyNewListings = mergedListings
             .where((listing) => !existingIds.contains(listing.id))
             .toList();
-        
+
         // Prepend new listings to the top, keep existing ones
         if (trulyNewListings.isNotEmpty) {
           _listings = [...trulyNewListings, ..._listings];
@@ -124,21 +124,21 @@ class ListingsProvider extends ChangeNotifier {
 
       _currentIndex += batchSize;
       _isLoadingMore = false;
-      
+
       // Clear initial loading state after first batch
       if (isFirstBatch) {
         _isLoading = false;
       }
-      
+
       notifyListeners();
     } catch (e) {
       _isLoadingMore = false;
-      
+
       // Clear loading states on error
       if (isFirstBatch) {
         _isLoading = false;
       }
-      
+
       _errorMessage = 'Failed to load more listings: $e';
       notifyListeners();
       debugPrint('Error loading more listings: $e');
