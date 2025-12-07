@@ -96,7 +96,7 @@ class ListingCard extends StatelessWidget {
                       context,
                       listen: false,
                     );
-                    
+
                     // Toggle immediately for responsive UI
                     try {
                       await provider.toggleListingViewed(listing.id);

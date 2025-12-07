@@ -59,29 +59,15 @@ class SiteSelector extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _buildSiteLogo(site, height: 20),
-                    const SizedBox(width: 8),
                     if (!site.isImplemented) ...[
+                      const SizedBox(width: 6),
                       Icon(
                         Icons.lock,
                         size: 16,
                         color:
                             site == Site.indeed ? Colors.grey : Colors.white70,
                       ),
-                      const SizedBox(width: 4),
                     ],
-                    Text(
-                      site.displayName,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: site.isImplemented
-                            ? (site == Site.indeed
-                                ? Colors.black
-                                : Colors.white)
-                            : (site == Site.indeed
-                                ? Colors.grey
-                                : Colors.white70),
-                      ),
-                    ),
                   ],
                 ),
               ),

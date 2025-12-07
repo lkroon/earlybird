@@ -167,7 +167,7 @@ class ListingsProvider extends ChangeNotifier {
 
     final listing = _listings[index];
     final previousState = listing.isViewed;
-    
+
     // Update UI immediately for responsiveness
     if (forceViewed) {
       listing.markAsViewed();

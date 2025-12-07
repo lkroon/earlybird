@@ -196,9 +196,8 @@ void main() {
       when(mockScraper.fetchListingHeadings(any)).thenAnswer((_) async => [
             {'title': 'Test', 'url': 'https://test.com', 'content': 'Content'}
           ]);
-      when(mockScraper.fetchListingImages(any)).thenAnswer((_) async => [
-            'https://example.com/image.jpg'
-          ]);
+      when(mockScraper.fetchListingImages(any))
+          .thenAnswer((_) async => ['https://example.com/image.jpg']);
       when(mockStorage.mergeWithCache(any, any)).thenAnswer(
         (invocation) => invocation.positionalArguments[0],
       );
