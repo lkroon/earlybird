@@ -26,20 +26,36 @@ class ListingCard extends StatelessWidget {
           // Listing image with badge overlay
           Stack(
             children: [
-              Image.network(
-                listing.imageUrl,
-                height: 200,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
+              ColorFiltered(
+                colorFilter: listing.isViewed
+                    ? const ColorFilter.matrix(<double>[
+                        0.2126, 0.7152, 0.0722, 0, 0, // Red channel
+                        0.2126, 0.7152, 0.0722, 0, 0, // Green channel
+                        0.2126, 0.7152, 0.0722, 0, 0, // Blue channel
+                        0, 0, 0, 1, 0, // Alpha channel
+                      ])
+                    : const ColorFilter.mode(
+                        Colors.transparent,
+                        BlendMode.multiply,
+                      ),
+                child: Opacity(
+                  opacity: listing.isViewed ? 0.6 : 1.0,
+                  child: Image.network(
+                    listing.imageUrl,
                     height: 200,
-                    color: Colors.grey[300],
-                    child: const Center(
-                      child: Icon(Icons.broken_image, size: 50),
-                    ),
-                  );
-                },
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        height: 200,
+                        color: Colors.grey[300],
+                        child: const Center(
+                          child: Icon(Icons.broken_image, size: 50),
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ),
               // Badge overlay
               Positioned(
