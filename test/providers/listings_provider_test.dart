@@ -192,9 +192,30 @@ void main() {
     });
 
     test('toggleListingViewed updates storage', () async {
+      // Setup: add listings first
+      when(mockScraper.fetchListingHeadings(any)).thenAnswer((_) async => [
+            {'title': 'Test', 'url': 'https://test.com', 'content': 'Content'}
+          ]);
+      when(mockScraper.fetchListingImages(any)).thenAnswer((_) async => [
+            'https://example.com/image.jpg'
+          ]);
+      when(mockStorage.mergeWithCache(any, any)).thenAnswer(
+        (invocation) => invocation.positionalArguments[0],
+      );
+
+      await provider.fetchListings();
+      await provider.loadMore(mergeWithCache: true);
+
+      // Now toggle
+      when(mockStorage.toggleListingViewed('https://test.com',
+              forceViewed: false))
+          .thenAnswer((_) async => {});
+
       await provider.toggleListingViewed('https://test.com');
 
-      verify(mockStorage.toggleListingViewed('https://test.com')).called(1);
+      verify(mockStorage.toggleListingViewed('https://test.com',
+              forceViewed: false))
+          .called(1);
     });
 
     test('notifies listeners on state changes', () async {

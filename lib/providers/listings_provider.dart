@@ -161,12 +161,34 @@ class ListingsProvider extends ChangeNotifier {
   /// If [forceViewed] is true, always sets to viewed (doesn't toggle)
   Future<void> toggleListingViewed(String url,
       {bool forceViewed = false}) async {
-    await storageService.toggleListingViewed(url, forceViewed: forceViewed);
-
-    // Update the listing in the current list
+    // Find and update the listing in memory first (optimistic update)
     final index = _listings.indexWhere((listing) => listing.id == url);
-    if (index != -1) {
+    if (index == -1) return;
+
+    final listing = _listings[index];
+    final previousState = listing.isViewed;
+    
+    // Update UI immediately for responsiveness
+    if (forceViewed) {
+      listing.markAsViewed();
+    } else {
+      listing.toggleViewed();
+    }
+    notifyListeners();
+
+    // Persist to storage
+    try {
+      await storageService.toggleListingViewed(url, forceViewed: forceViewed);
+    } catch (e) {
+      // Revert on error
+      if (forceViewed) {
+        listing.isViewed = previousState;
+      } else {
+        listing.toggleViewed(); // Toggle back
+      }
       notifyListeners();
+      debugPrint('Error persisting viewed status: $e');
+      rethrow;
     }
   }
 

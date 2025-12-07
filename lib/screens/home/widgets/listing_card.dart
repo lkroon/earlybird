@@ -91,11 +91,19 @@ class ListingCard extends StatelessWidget {
                 left: 8,
                 child: GestureDetector(
                   onTap: () async {
+                    // Prevent interaction during list operations
                     final provider = Provider.of<ListingsProvider>(
                       context,
                       listen: false,
                     );
-                    await provider.toggleListingViewed(listing.id);
+                    
+                    // Toggle immediately for responsive UI
+                    try {
+                      await provider.toggleListingViewed(listing.id);
+                    } catch (e) {
+                      // Silently handle errors - the toggle will revert if it fails
+                      debugPrint('Error toggling viewed status: $e');
+                    }
                   },
                   child: Container(
                     padding: const EdgeInsets.all(8),
