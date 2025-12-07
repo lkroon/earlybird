@@ -158,8 +158,10 @@ class ListingsProvider extends ChangeNotifier {
   }
 
   /// Toggles the viewed status of a listing
-  Future<void> toggleListingViewed(String url) async {
-    await storageService.toggleListingViewed(url);
+  /// If [forceViewed] is true, always sets to viewed (doesn't toggle)
+  Future<void> toggleListingViewed(String url,
+      {bool forceViewed = false}) async {
+    await storageService.toggleListingViewed(url, forceViewed: forceViewed);
 
     // Update the listing in the current list
     final index = _listings.indexWhere((listing) => listing.id == url);

@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 import '../../../models/listing.dart';
 import '../../../providers/listings_provider.dart';
+import 'image_gallery_screen.dart';
 
 /// A card widget that displays a single listing
 class ListingCard extends StatelessWidget {
@@ -26,34 +27,61 @@ class ListingCard extends StatelessWidget {
           // Listing image with badge overlay
           Stack(
             children: [
-              ColorFiltered(
-                colorFilter: listing.isViewed
-                    ? const ColorFilter.matrix(<double>[
-                        0.2126, 0.7152, 0.0722, 0, 0, // Red channel
-                        0.2126, 0.7152, 0.0722, 0, 0, // Green channel
-                        0.2126, 0.7152, 0.0722, 0, 0, // Blue channel
-                        0, 0, 0, 1, 0, // Alpha channel
-                      ])
-                    : const ColorFilter.mode(
-                        Colors.transparent,
-                        BlendMode.multiply,
-                      ),
-                child: Opacity(
-                  opacity: listing.isViewed ? 0.6 : 1.0,
-                  child: Image.network(
-                    listing.imageUrl,
-                    height: 200,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        height: 200,
-                        color: Colors.grey[300],
-                        child: const Center(
-                          child: Icon(Icons.broken_image, size: 50),
+              GestureDetector(
+                onTap: () async {
+                  // Mark as viewed when opening gallery
+                  final provider = Provider.of<ListingsProvider>(
+                    context,
+                    listen: false,
+                  );
+                  await provider.toggleListingViewed(listing.id,
+                      forceViewed: true);
+
+                  // Open image gallery
+                  if (context.mounted) {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ImageGalleryScreen(
+                          listing: listing,
+                          initialIndex: 0,
                         ),
-                      );
-                    },
+                      ),
+                    );
+                  }
+                },
+                child: ColorFiltered(
+                  colorFilter: listing.isViewed
+                      ? const ColorFilter.matrix(<double>[
+                          0.2126, 0.7152, 0.0722, 0, 0, // Red channel
+                          0.2126, 0.7152, 0.0722, 0, 0, // Green channel
+                          0.2126, 0.7152, 0.0722, 0, 0, // Blue channel
+                          0, 0, 0, 1, 0, // Alpha channel
+                        ])
+                      : const ColorFilter.mode(
+                          Colors.transparent,
+                          BlendMode.multiply,
+                        ),
+                  child: Opacity(
+                    opacity: listing.isViewed ? 0.6 : 1.0,
+                    child: Hero(
+                      tag: 'listing-image-${listing.id}',
+                      child: Image.network(
+                        listing.imageUrl,
+                        height: 200,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            height: 200,
+                            color: Colors.grey[300],
+                            child: const Center(
+                              child: Icon(Icons.broken_image, size: 50),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -92,6 +120,41 @@ class ListingCard extends StatelessWidget {
                   ),
                 ),
               ),
+              // Image count indicator (bottom right)
+              if (listing.imageUrls.length > 1)
+                Positioned(
+                  bottom: 8,
+                  right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.photo_library,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${listing.imageUrls.length}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
             ],
           ),
 

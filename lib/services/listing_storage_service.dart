@@ -66,12 +66,18 @@ class ListingStorageService {
   }
 
   /// Toggles the viewed status of a listing
-  Future<void> toggleListingViewed(String url) async {
+  /// If [forceViewed] is true, always sets to viewed (doesn't toggle)
+  Future<void> toggleListingViewed(String url,
+      {bool forceViewed = false}) async {
     if (_box == null) return;
 
     final listing = _box!.get(url);
     if (listing != null) {
-      listing.toggleViewed();
+      if (forceViewed) {
+        listing.markAsViewed();
+      } else {
+        listing.toggleViewed();
+      }
       await listing.save();
     }
   }
