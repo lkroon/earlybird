@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:earlybird/screens/home/home_screen.dart';
 import 'package:earlybird/providers/listings_provider.dart';
 import 'package:earlybird/models/listing.dart';
+import 'package:earlybird/models/site.dart';
 
 @GenerateMocks([ListingsProvider])
 import 'home_screen_test.mocks.dart';
@@ -20,10 +21,10 @@ void main() {
       // Default mock behavior
       when(mockProvider.isLoading).thenReturn(false);
       when(mockProvider.isLoadingMore).thenReturn(false);
-      when(mockProvider.isRefreshing).thenReturn(false);
       when(mockProvider.listings).thenReturn([]);
       when(mockProvider.hasMore).thenReturn(false);
       when(mockProvider.errorMessage).thenReturn(null);
+      when(mockProvider.selectedSite).thenReturn(Site.funda);
       when(mockProvider.shouldLoadMore(any)).thenReturn(false);
       when(mockProvider.fetchListings()).thenAnswer((_) async => {});
       when(mockProvider.loadMore()).thenAnswer((_) async => {});
@@ -61,18 +62,18 @@ void main() {
     });
 
     testWidgets('displays listings in ListView', (WidgetTester tester) async {
-      final mockListings = <Listing>[
+      final mockListings = [
         Listing(
           title: 'House 1',
           content: 'Description 1',
           url: 'https://example.com/1',
-          imageUrls: ['https://example.com/image1.jpg'],
+          imageUrl: 'https://example.com/image1.jpg',
         ),
         Listing(
           title: 'House 2',
           content: 'Description 2',
           url: 'https://example.com/2',
-          imageUrls: ['https://example.com/image2.jpg'],
+          imageUrl: 'https://example.com/image2.jpg',
         ),
       ];
 
@@ -87,12 +88,12 @@ void main() {
 
     testWidgets('shows loading indicator at bottom when isLoadingMore is true',
         (WidgetTester tester) async {
-      final mockListings = <Listing>[
+      final mockListings = [
         Listing(
           title: 'House 1',
           content: 'Description',
           url: 'https://example.com/1',
-          imageUrls: ['https://example.com/image.jpg'],
+          imageUrl: 'https://example.com/image.jpg',
         ),
       ];
 
@@ -107,10 +108,9 @@ void main() {
     testWidgets('has refresh button', (WidgetTester tester) async {
       await tester.pumpWidget(createHomeScreen());
 
-      expect(find.byType(FloatingActionButton), findsNWidgets(3));
+      expect(find.byType(FloatingActionButton), findsNWidgets(2));
       expect(find.byIcon(Icons.refresh), findsOneWidget);
       expect(find.byIcon(Icons.filter_list), findsOneWidget);
-      expect(find.byIcon(Icons.delete_forever), findsOneWidget);
     });
 
     testWidgets('refresh button calls provider.refresh()',
@@ -138,12 +138,12 @@ void main() {
     });
 
     testWidgets('ListView has correct padding', (WidgetTester tester) async {
-      final mockListings = <Listing>[
+      final mockListings = [
         Listing(
           title: 'House',
           content: 'Description',
           url: 'https://example.com',
-          imageUrls: ['https://example.com/image.jpg'],
+          imageUrl: 'https://example.com/image.jpg',
         ),
       ];
 
@@ -157,13 +157,13 @@ void main() {
 
     testWidgets('itemCount includes loading indicator when isLoadingMore',
         (WidgetTester tester) async {
-      final mockListings = List<Listing>.generate(
+      final mockListings = List.generate(
         5,
         (i) => Listing(
           title: 'House $i',
           content: 'Description',
           url: 'https://example.com/$i',
-          imageUrls: ['https://example.com/image$i.jpg'],
+          imageUrl: 'https://example.com/image$i.jpg',
         ),
       );
 

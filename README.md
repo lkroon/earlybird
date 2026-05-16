@@ -1,128 +1,83 @@
-# EarlyBird 🏠
+# EarlyBird
 
-![Tests](https://github.com/lkroon/earlybird/workflows/Flutter%20Tests/badge.svg)
-![Build](https://github.com/lkroon/earlybird/workflows/Build%20and%20Deploy/badge.svg)
-![Code Quality](https://github.com/lkroon/earlybird/workflows/Code%20Quality/badge.svg)
+A Flutter app that scrapes real estate listings from Funda.nl. Browse listings, filter by area, and open details directly on Funda.
 
-A Flutter app for finding real estate listings on Funda and other platforms. Get notified early about new listings that match your filters!
+## Current State
 
-## Features
+This is an experimental/prototype project. The app scrapes Funda search results via a public CORS proxy (`corsproxy.io`), parses HTML for listing headings, then lazily fetches images from detail pages. It works but is fragile — the scraping depends on Funda's current HTML structure and the CORS proxy staying available.
 
-- 🏠 Browse real estate listings from Funda
-- 🔄 Incremental loading with lazy image fetching
-- 🔍 Customizable search filters (area, property type, date, sort order)
-- 📱 Cross-platform (Android, iOS, Web, Desktop)
-- ✨ Clean, modular architecture
-- 🧪 Comprehensive test coverage (70+ tests)
+**What works:**
+- Scraping Funda listings (headings + images)
+- Filtering by area (other filter fields exist but are disabled in the UI)
+- Infinite scroll with batched image loading
+- Opening listing URLs in external browser
+- 70+ unit and widget tests
+
+**Known issues:**
+- CORS proxy (`corsproxy.io`) is a public third-party service and can be unreliable
+- HTML scraping is brittle (depends on Funda's markup structure)
+- Images are fetched sequentially (slow)
+- Listings without images are silently hidden
+- Theme colors don't match Funda branding despite using their logo
+- `dart:io` import in constants breaks web builds
 
 ## Architecture
 
-The app follows a clean, modular architecture with clear separation of concerns:
+```
+lib/
+├── main.dart                    # App entry point with Provider setup
+├── core/
+│   ├── constants/               # URLs, headers, pagination config
+│   ├── theme/                   # Theme configuration
+│   └── utils/                   # URL builder utility
+├── models/                      # Listing, SearchFilter
+├── services/                    # ScraperService (abstract), FundaScraperService, ImageLoaderService
+├── providers/                   # ListingsProvider (ChangeNotifier)
+└── screens/home/                # HomeScreen, ListingCard, FilterDialog
+```
 
-- **Models**: Data structures (`Listing`, `SearchFilter`)
-- **Services**: Business logic (scrapers, image loading)
-- **Providers**: State management (using Provider pattern)
-- **Screens**: UI components and widgets
-- **Core**: Shared utilities, constants, and theme
-
-See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed documentation.
+State management uses Provider. The `ScraperService` interface allows adding new sources (e.g., Jaap.nl) by implementing the abstract class.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Flutter SDK 3.10.0 or higher
-- Dart SDK 3.0.0 or higher
+- Flutter SDK >=3.10.0 (Dart >=3.0.0)
+- For WSL2: install Flutter natively in Linux (`snap install flutter --classic` or manual install) — the Windows-side SDK won't work from WSL2
+- Chrome (for web target, easiest on WSL2)
 
-### Installation
+### Run
 
-1. Clone the repository:
-```bash
-git clone https://github.com/lkroon/earlybird.git
-cd earlybird
-```
-
-2. Install dependencies:
 ```bash
 flutter pub get
+flutter run -d chrome
 ```
 
-3. Run the app:
-```bash
-flutter run
-```
+### VS Code
 
-### Running Tests
+The project includes `.vscode/launch.json` with configurations for Chrome, Android, and Linux Desktop. Select a launch configuration from the Run and Debug panel.
+
+### Tests
 
 ```bash
-# Run all tests
 flutter test
-
-# Run tests with coverage
 flutter test --coverage
 
-# Run specific test file
-flutter test test/models/listing_test.dart
+# Regenerate mocks after changing service interfaces
+dart run build_runner build --delete-conflicting-outputs
 ```
 
-See [TESTING.md](TESTING.md) for comprehensive test documentation.
+## Dependencies
 
-## Project Structure
-
-```
-lib/
-├── main.dart                    # App entry point
-├── core/                        # Shared utilities
-│   ├── constants/               # App constants
-│   ├── theme/                   # Theme configuration
-│   └── utils/                   # Utility functions
-├── models/                      # Data models
-├── services/                    # Business logic
-├── providers/                   # State management
-└── screens/                     # UI screens and widgets
-
-test/
-├── models/                      # Model tests
-├── services/                    # Service tests
-├── providers/                   # Provider tests
-└── widgets/                     # Widget tests
-```
-
-## CI/CD
-
-This project uses GitHub Actions for continuous integration:
-
-- **Tests**: Run automatically on every push and pull request
-- **Code Quality**: Formatting and analysis checks
-- **Build**: Automated builds for Android, iOS, and Web
-
-See [.github/WORKFLOWS.md](.github/WORKFLOWS.md) for details.
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-Ensure all tests pass before submitting:
-```bash
-flutter test
-flutter analyze
-dart format .
-```
-
-## Roadmap
-
-- [ ] Add filter UI for dynamic search customization
-- [ ] Implement push notifications for new listings
-- [ ] Add support for additional real estate platforms (Jaap.nl, etc.)
-- [ ] Implement favorites/saved listings
-- [ ] Add local data persistence
-- [ ] Map view for listings
-- [ ] Price alerts
+| Package | Purpose |
+|---------|---------|
+| `provider` | State management |
+| `http` | HTTP client for scraping |
+| `html` | HTML parsing |
+| `url_launcher` | Open listings in browser |
+| `flutter_svg` | Funda logo rendering |
+| `mockito` + `build_runner` | Test mocking (dev) |
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT — see [LICENSE](LICENSE).

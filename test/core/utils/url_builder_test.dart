@@ -11,7 +11,7 @@ void main() {
 
       expect(url, contains('https://www.funda.nl/zoeken/koop'));
       expect(url,
-          contains('selected_area=%5B%22utrecht%22%5D')); // encoded ["utrecht"]
+          contains('selected_area=%5B%22soest%22%5D')); // encoded ["soest"]
       expect(
           url, contains('object_type=%5B%22house%22%5D')); // encoded ["house"]
       expect(url, contains('publication_date=%2230%22')); // encoded "30"
@@ -42,21 +42,19 @@ void main() {
       expect(uri.path, '/zoeken/koop');
     });
 
-    test('withCorsProxy wraps URL correctly', () {
+    test('withCorsProxy returns URL unchanged on non-web platforms', () {
       const testUrl = 'https://www.funda.nl/test';
       final proxiedUrl = UrlBuilder.withCorsProxy(testUrl);
 
-      expect(proxiedUrl, startsWith(AppConstants.corsProxyUrl));
-      expect(proxiedUrl, contains(Uri.encodeComponent(testUrl)));
+      // On non-web (test runner), CORS proxy is skipped
+      expect(proxiedUrl, equals(testUrl));
     });
 
-    test('withCorsProxy handles URL encoding', () {
+    test('withCorsProxy preserves query parameters on non-web', () {
       const testUrl = 'https://www.funda.nl/test?param=value&other=test';
       final proxiedUrl = UrlBuilder.withCorsProxy(testUrl);
 
-      expect(proxiedUrl, startsWith('https://corsproxy.io/?'));
-      // The URL should be properly encoded
-      expect(proxiedUrl.length, greaterThan(testUrl.length));
+      expect(proxiedUrl, equals(testUrl));
     });
 
     test('buildFundaUrl with special characters in area', () {

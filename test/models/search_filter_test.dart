@@ -6,7 +6,7 @@ void main() {
     test('creates SearchFilter with default values', () {
       final filter = SearchFilter();
 
-      expect(filter.area, 'utrecht');
+      expect(filter.area, 'soest');
       expect(filter.objectType, 'house');
       expect(filter.publicationDate, '30');
       expect(filter.sortOrder, 'date_down');

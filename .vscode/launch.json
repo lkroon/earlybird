@@ -1,0 +1,50 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "EarlyBird (Web)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": [
+        "-d",
+        "web-server",
+        "--web-port=8080",
+        "--web-hostname=0.0.0.0"
+      ]
+    },
+    {
+      "name": "EarlyBird (Web - Profile)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": [
+        "-d",
+        "web-server",
+        "--web-port=8080",
+        "--web-hostname=0.0.0.0",
+        "--profile"
+      ]
+    },
+    {
+      "name": "EarlyBird (Android)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": [
+        "-d",
+        "android"
+      ]
+    },
+    {
+      "name": "EarlyBird (Linux Desktop)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": [
+        "-d",
+        "linux"
+      ]
+    }
+  ]
+}

@@ -5,7 +5,6 @@ import 'package:earlybird/providers/listings_provider.dart';
 import 'package:earlybird/services/scraper_service.dart';
 import 'package:earlybird/services/listing_storage_service.dart';
 import 'package:earlybird/models/search_filter.dart';
-import 'package:earlybird/models/listing.dart';
 
 @GenerateMocks([ScraperService, ListingStorageService])
 import 'listings_provider_test.mocks.dart';
@@ -20,10 +19,11 @@ void main() {
       mockScraper = MockScraperService();
       mockStorage = MockListingStorageService();
       when(mockScraper.serviceName).thenReturn('TestScraper');
-      when(mockStorage.getAllListings()).thenReturn([]);
-      when(mockStorage.getListingsForFilter(any)).thenReturn([]);
       when(mockStorage.mergeWithCache(any, any))
-          .thenAnswer((inv) => inv.positionalArguments[0]);
+          .thenAnswer((invocation) => invocation.positionalArguments[0]);
+      when(mockStorage.saveListings(any)).thenAnswer((_) async {});
+      when(mockStorage.updateListingViewedStatus(any, any))
+          .thenAnswer((_) async {});
       provider = ListingsProvider(
         scraperService: mockScraper,
         storageService: mockStorage,
@@ -38,37 +38,18 @@ void main() {
       expect(provider.currentFilter, isNotNull);
     });
 
-    test('fetchListings loads cached listings first', () async {
-      final cachedListings = [
-        Listing(
-          title: 'Cached House',
-          content: 'Desc',
-          url: 'url1',
-          imageUrls: ['img1.jpg'],
-          filterKey: 'utrecht-house-30-date_down',
-        ),
-      ];
-
-      when(mockStorage.getListingsForFilter(any)).thenReturn(cachedListings);
+    test('fetchListings updates loading state', () async {
       when(mockScraper.fetchListingHeadings(any)).thenAnswer((_) async => []);
 
-      await provider.fetchListings();
-
-      expect(provider.listings, cachedListings);
-    });
-
-    test('fetchListings updates refreshing state', () async {
-      when(mockScraper.fetchListingHeadings(any)).thenAnswer((_) async => []);
-
-      final refreshingStates = <bool>[];
+      final loadingStates = <bool>[];
       provider.addListener(() {
-        refreshingStates.add(provider.isRefreshing);
+        loadingStates.add(provider.isLoading);
       });
 
       await provider.fetchListings();
 
-      expect(refreshingStates, contains(true));
-      expect(provider.isRefreshing, false);
+      expect(loadingStates, contains(true));
+      expect(provider.isLoading, false);
     });
 
     test('fetchListings fetches headings from scraper', () async {
@@ -79,9 +60,8 @@ void main() {
 
       when(mockScraper.fetchListingHeadings(any))
           .thenAnswer((_) async => mockHeadings);
-      when(mockScraper.fetchListingImages(any))
-          .thenAnswer((_) async => ['image.jpg']);
-      when(mockStorage.saveListings(any)).thenAnswer((_) async => {});
+      when(mockScraper.fetchListingImage(any))
+          .thenAnswer((_) async => 'image.jpg');
 
       await provider.fetchListings();
       // Wait for the loadMore to complete
@@ -93,7 +73,7 @@ void main() {
 
     test('loadMore loads images for next batch', () async {
       final mockHeadings = List.generate(
-        10,
+        15,
         (i) => {
           'title': 'House $i',
           'content': 'Description',
@@ -104,13 +84,12 @@ void main() {
 
       when(mockScraper.fetchListingHeadings(any))
           .thenAnswer((_) async => mockHeadings);
-      when(mockScraper.fetchListingImages(any))
-          .thenAnswer((_) async => ['image.jpg']);
-      when(mockStorage.saveListings(any)).thenAnswer((_) async => {});
+      when(mockScraper.fetchListingImage(any))
+          .thenAnswer((_) async => 'image.jpg');
 
       await provider.fetchListings();
 
-      // First batch should load 5 items
+      // First batch should load 5 items (initialBatchSize)
       expect(provider.listings.length, 5);
       expect(provider.hasMore, true);
 
@@ -118,7 +97,7 @@ void main() {
 
       // After loadMore, should have 10 items (5 + 5)
       expect(provider.listings.length, 10);
-      expect(provider.hasMore, false);
+      expect(provider.hasMore, true);
     });
 
     test('loadMore does nothing when already loading', () async {
@@ -159,15 +138,14 @@ void main() {
 
       when(mockScraper.fetchListingHeadings(any))
           .thenAnswer((_) async => mockHeadings);
-      when(mockScraper.fetchListingImages(any))
-          .thenAnswer((_) async => ['image.jpg']);
-      when(mockStorage.saveListings(any)).thenAnswer((_) async => {});
+      when(mockScraper.fetchListingImage(any))
+          .thenAnswer((_) async => 'image.jpg');
 
       await provider.fetchListings();
 
       expect(provider.listings.length, 5);
 
-      // Should load more when within 2 items of end (5 - 2 = 3)
+      // Should load more when viewing item 3 or beyond (5 - 2 = 3)
       expect(provider.shouldLoadMore(3), true);
       expect(provider.shouldLoadMore(4), true);
       expect(provider.shouldLoadMore(2), false);
@@ -191,30 +169,28 @@ void main() {
       verify(mockScraper.fetchListingHeadings(any)).called(1);
     });
 
-    test('toggleListingViewed updates storage', () async {
-      // Setup: add listings first
-      when(mockScraper.fetchListingHeadings(any)).thenAnswer((_) async => [
-            {'title': 'Test', 'url': 'https://test.com', 'content': 'Content'}
-          ]);
-      when(mockScraper.fetchListingImages(any))
-          .thenAnswer((_) async => ['https://example.com/image.jpg']);
-      when(mockStorage.mergeWithCache(any, any)).thenAnswer(
-        (invocation) => invocation.positionalArguments[0],
-      );
+    test('fetchListings clears previous listings', () async {
+      final firstHeadings = [
+        {'title': 'Old House', 'content': '', 'url': 'url', 'image': ''},
+      ];
+      final secondHeadings = [
+        {'title': 'New House', 'content': '', 'url': 'url', 'image': ''},
+      ];
+
+      when(mockScraper.fetchListingHeadings(any))
+          .thenAnswer((_) async => firstHeadings);
+      when(mockScraper.fetchListingImage(any))
+          .thenAnswer((_) async => 'image.jpg');
 
       await provider.fetchListings();
-      await provider.loadMore(mergeWithCache: true);
+      expect(provider.listings[0].title, 'Old House');
 
-      // Now toggle
-      when(mockStorage.toggleListingViewed('https://test.com',
-              forceViewed: false))
-          .thenAnswer((_) async => {});
+      when(mockScraper.fetchListingHeadings(any))
+          .thenAnswer((_) async => secondHeadings);
 
-      await provider.toggleListingViewed('https://test.com');
-
-      verify(mockStorage.toggleListingViewed('https://test.com',
-              forceViewed: false))
-          .called(1);
+      await provider.fetchListings();
+      expect(provider.listings.length, 1);
+      expect(provider.listings[0].title, 'New House');
     });
 
     test('notifies listeners on state changes', () async {

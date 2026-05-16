@@ -20,10 +20,10 @@ class ListingAdapter extends TypeAdapter<Listing> {
       title: fields[0] as String,
       content: fields[1] as String,
       url: fields[2] as String,
-      imageUrls: (fields[3] as List).cast<String>(),
-      firstSeenAt: fields[4] as DateTime?,
-      lastSeenAt: fields[5] as DateTime?,
-      isViewed: fields[6] as bool,
+      imageUrl: fields[3] as String,
+      isViewed: fields[4] as bool,
+      firstSeenAt: fields[5] as DateTime?,
+      lastSeenAt: fields[6] as DateTime?,
       filterKey: fields[7] as String,
     );
   }
@@ -39,13 +39,13 @@ class ListingAdapter extends TypeAdapter<Listing> {
       ..writeByte(2)
       ..write(obj.url)
       ..writeByte(3)
-      ..write(obj.imageUrls)
+      ..write(obj.imageUrl)
       ..writeByte(4)
-      ..write(obj.firstSeenAt)
-      ..writeByte(5)
-      ..write(obj.lastSeenAt)
-      ..writeByte(6)
       ..write(obj.isViewed)
+      ..writeByte(5)
+      ..write(obj.firstSeenAt)
+      ..writeByte(6)
+      ..write(obj.lastSeenAt)
       ..writeByte(7)
       ..write(obj.filterKey);
   }

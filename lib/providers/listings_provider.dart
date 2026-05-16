@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import '../models/listing.dart';
 import '../models/search_filter.dart';
+import '../models/site.dart';
 import '../services/scraper_service.dart';
 import '../services/image_loader_service.dart';
 import '../services/listing_storage_service.dart';
 import '../core/constants/app_constants.dart';
 
-/// Provider for managing listings state
 class ListingsProvider extends ChangeNotifier {
   final ScraperService scraperService;
   final ImageLoaderService imageLoaderService;
@@ -17,7 +17,6 @@ class ListingsProvider extends ChangeNotifier {
     required this.storageService,
   }) : imageLoaderService = ImageLoaderService(scraperService);
 
-  // State
   List<Listing> _listings = [];
   List<Map<String, String>> _allHeadings = [];
   bool _isLoading = false;
@@ -26,8 +25,8 @@ class ListingsProvider extends ChangeNotifier {
   int _currentIndex = 0;
   SearchFilter _currentFilter = SearchFilter();
   String? _errorMessage;
+  Site _selectedSite = Site.funda;
 
-  // Getters
   List<Listing> get listings => _listings;
   bool get isLoading => _isLoading;
   bool get isLoadingMore => _isLoadingMore;
@@ -35,8 +34,15 @@ class ListingsProvider extends ChangeNotifier {
   bool get hasMore => _currentIndex < _allHeadings.length;
   SearchFilter get currentFilter => _currentFilter;
   String? get errorMessage => _errorMessage;
+  Site get selectedSite => _selectedSite;
 
-  /// Fetches listings with the current filter
+  void selectSite(Site site) {
+    if (site == _selectedSite) return;
+    _selectedSite = site;
+    notifyListeners();
+    fetchListings();
+  }
+
   Future<void> fetchListings() async {
     // Load cached listings immediately
     _loadCachedListings();
@@ -48,13 +54,11 @@ class ListingsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Fetch all listing headings in the background
       _allHeadings = await scraperService.fetchListingHeadings(_currentFilter);
       _isRefreshing = false;
       notifyListeners();
 
-      // Load first batch with images
-      await loadMore(mergeWithCache: true);
+      await loadMore();
     } catch (e) {
       _isRefreshing = false;
       _errorMessage = 'Failed to load listings: $e';
@@ -63,23 +67,7 @@ class ListingsProvider extends ChangeNotifier {
     }
   }
 
-  /// Loads cached listings from storage
-  void _loadCachedListings() {
-    final filterKey = _currentFilter.toKey();
-    final cachedListings = storageService.getListingsForFilter(filterKey);
-    if (cachedListings.isNotEmpty) {
-      _listings = cachedListings;
-      _isLoading = false;
-      notifyListeners();
-    } else {
-      _isLoading = true;
-      _listings = [];
-      notifyListeners();
-    }
-  }
-
-  /// Loads more listings (fetching images for the next batch)
-  Future<void> loadMore({bool mergeWithCache = false}) async {
+  Future<void> loadMore() async {
     if (_isLoadingMore || !hasMore) return;
 
     final isFirstBatch = _currentIndex == 0;
@@ -97,31 +85,12 @@ class ListingsProvider extends ChangeNotifier {
         filterKey: filterKey,
       );
 
-      if (mergeWithCache) {
-        // Get merged listings (includes cache + new)
-        final mergedListings =
-            storageService.mergeWithCache(newListings, filterKey);
+      final filterKey = _currentFilter.toQueryString();
+      final listingsWithFilter = newListings.map((l) => l.copyWith(filterKey: filterKey)).toList();
+      final merged = storageService.mergeWithCache(listingsWithFilter, filterKey);
+      await storageService.saveListings(merged);
 
-        // Find truly new listings (not in current _listings)
-        final existingIds = _listings.map((l) => l.id).toSet();
-        final trulyNewListings = mergedListings
-            .where((listing) => !existingIds.contains(listing.id))
-            .toList();
-
-        // Prepend new listings to the top, keep existing ones
-        if (trulyNewListings.isNotEmpty) {
-          _listings = [...trulyNewListings, ..._listings];
-        }
-
-        // Save merged listings to cache
-        await storageService.saveListings(mergedListings);
-      } else {
-        _listings.addAll(newListings);
-
-        // Save new listings to cache
-        await storageService.saveListings(newListings);
-      }
-
+      _listings.addAll(merged);
       _currentIndex += batchSize;
       _isLoadingMore = false;
 
@@ -145,60 +114,21 @@ class ListingsProvider extends ChangeNotifier {
     }
   }
 
-  /// Updates the search filter and refetches listings
+  Future<void> markAsViewed(Listing listing) async {
+    listing.markAsViewed();
+    await storageService.updateListingViewedStatus(listing.id, true);
+    notifyListeners();
+  }
+
   Future<void> updateFilter(SearchFilter newFilter) async {
     _currentFilter = newFilter;
     await fetchListings();
   }
 
-  /// Checks if we should load more based on scroll position
   bool shouldLoadMore(int currentItemIndex) {
     return currentItemIndex >=
         _listings.length - AppConstants.loadMoreThreshold;
   }
 
-  /// Toggles the viewed status of a listing
-  /// If [forceViewed] is true, always sets to viewed (doesn't toggle)
-  Future<void> toggleListingViewed(String url,
-      {bool forceViewed = false}) async {
-    // Find and update the listing in memory first (optimistic update)
-    final index = _listings.indexWhere((listing) => listing.id == url);
-    if (index == -1) return;
-
-    final listing = _listings[index];
-    final previousState = listing.isViewed;
-
-    // Update UI immediately for responsiveness
-    if (forceViewed) {
-      listing.markAsViewed();
-    } else {
-      listing.toggleViewed();
-    }
-    notifyListeners();
-
-    // Persist to storage
-    try {
-      await storageService.toggleListingViewed(url, forceViewed: forceViewed);
-    } catch (e) {
-      // Revert on error
-      if (forceViewed) {
-        listing.isViewed = previousState;
-      } else {
-        listing.toggleViewed(); // Toggle back
-      }
-      notifyListeners();
-      debugPrint('Error persisting viewed status: $e');
-      rethrow;
-    }
-  }
-
-  /// Clears all cached listings from storage
-  Future<void> clearAllCachedListings() async {
-    await storageService.clearAll();
-    _listings.clear();
-    notifyListeners();
-  }
-
-  /// Refreshes the listings
   Future<void> refresh() => fetchListings();
 }

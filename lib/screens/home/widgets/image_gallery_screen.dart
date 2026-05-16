@@ -20,12 +20,16 @@ class ImageGalleryScreen extends StatefulWidget {
 class _ImageGalleryScreenState extends State<ImageGalleryScreen> {
   late PageController _pageController;
   late int _currentIndex;
+  late List<String> _imageUrls;
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
     _pageController = PageController(initialPage: widget.initialIndex);
+    _imageUrls = widget.listing.imageUrl.isNotEmpty
+        ? [widget.listing.imageUrl]
+        : [];
   }
 
   @override
@@ -42,7 +46,7 @@ class _ImageGalleryScreenState extends State<ImageGalleryScreen> {
         backgroundColor: Colors.black,
         iconTheme: const IconThemeData(color: Colors.white),
         title: Text(
-          '${_currentIndex + 1} / ${widget.listing.imageUrls.length}',
+          '${_currentIndex + 1} / ${_imageUrls.length}',
           style: const TextStyle(color: Colors.white),
         ),
         actions: [
@@ -73,7 +77,7 @@ class _ImageGalleryScreenState extends State<ImageGalleryScreen> {
                   _currentIndex = index;
                 });
               },
-              itemCount: widget.listing.imageUrls.length,
+              itemCount: _imageUrls.length,
               itemBuilder: (context, index) {
                 final isFirstImage = index == 0;
                 return Center(
@@ -86,7 +90,7 @@ class _ImageGalleryScreenState extends State<ImageGalleryScreen> {
                       minScale: 1.0,
                       maxScale: 4.0,
                       child: Image.network(
-                        widget.listing.imageUrls[index],
+                        _imageUrls[index],
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) {
                           return Container(

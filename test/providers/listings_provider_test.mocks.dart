@@ -5,9 +5,9 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i4;
 
-import 'package:earlybird/models/listing.dart' as _i7;
+import 'package:earlybird/models/listing.dart' as _i6;
 import 'package:earlybird/models/search_filter.dart' as _i5;
-import 'package:earlybird/services/listing_storage_service.dart' as _i6;
+import 'package:earlybird/services/listing_storage_service.dart' as _i7;
 import 'package:earlybird/services/scraper_service.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i3;
@@ -211,6 +211,90 @@ class MockListingStorageService extends _i1.Mock
           #close,
           [],
         ),
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
+}
+
+/// A class which mocks [ListingStorageService].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockListingStorageService extends _i1.Mock
+    implements _i7.ListingStorageService {
+  MockListingStorageService() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i4.Future<void> init() => (super.noSuchMethod(
+        Invocation.method(#init, []),
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
+
+  @override
+  List<_i6.Listing> getAllListings() => (super.noSuchMethod(
+        Invocation.method(#getAllListings, []),
+        returnValue: <_i6.Listing>[],
+      ) as List<_i6.Listing>);
+
+  @override
+  List<_i6.Listing> getListingsForFilter(String? filterKey) =>
+      (super.noSuchMethod(
+        Invocation.method(#getListingsForFilter, [filterKey]),
+        returnValue: <_i6.Listing>[],
+      ) as List<_i6.Listing>);
+
+  @override
+  _i4.Future<void> saveListing(_i6.Listing? listing) => (super.noSuchMethod(
+        Invocation.method(#saveListing, [listing]),
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
+
+  @override
+  _i4.Future<void> saveListings(List<_i6.Listing>? listings) =>
+      (super.noSuchMethod(
+        Invocation.method(#saveListings, [listings]),
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
+
+  @override
+  _i4.Future<void> updateListingViewedStatus(String? url, bool? isViewed) =>
+      (super.noSuchMethod(
+        Invocation.method(#updateListingViewedStatus, [url, isViewed]),
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
+
+  @override
+  _i4.Future<void> toggleListingViewed(String? url, {bool? forceViewed}) =>
+      (super.noSuchMethod(
+        Invocation.method(#toggleListingViewed, [url],
+            {#forceViewed: forceViewed}),
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
+
+  @override
+  List<_i6.Listing> mergeWithCache(
+          List<_i6.Listing>? newListings, String? filterKey) =>
+      (super.noSuchMethod(
+        Invocation.method(#mergeWithCache, [newListings, filterKey]),
+        returnValue: <_i6.Listing>[],
+      ) as List<_i6.Listing>);
+
+  @override
+  _i4.Future<void> clearAll() => (super.noSuchMethod(
+        Invocation.method(#clearAll, []),
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
+
+  @override
+  _i4.Future<void> close() => (super.noSuchMethod(
+        Invocation.method(#close, []),
         returnValue: _i4.Future<void>.value(),
         returnValueForMissingStub: _i4.Future<void>.value(),
       ) as _i4.Future<void>);

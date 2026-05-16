@@ -6,11 +6,12 @@
 import 'dart:async' as _i8;
 import 'dart:ui' as _i9;
 
-import 'package:earlybird/models/listing.dart' as _i7;
-import 'package:earlybird/models/search_filter.dart' as _i5;
-import 'package:earlybird/providers/listings_provider.dart' as _i6;
+import 'package:earlybird/models/listing.dart' as _i6;
+import 'package:earlybird/models/search_filter.dart' as _i4;
+import 'package:earlybird/models/site.dart' as _i9;
+import 'package:earlybird/providers/listings_provider.dart' as _i5;
 import 'package:earlybird/services/image_loader_service.dart' as _i3;
-import 'package:earlybird/services/listing_storage_service.dart' as _i4;
+import 'package:earlybird/services/listing_storage_service.dart' as _i10;
 import 'package:earlybird/services/scraper_service.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
 
@@ -70,6 +71,17 @@ class _FakeSearchFilter_3 extends _i1.SmartFake implements _i5.SearchFilter {
         );
 }
 
+class _FakeListingStorageService_3 extends _i1.SmartFake
+    implements _i10.ListingStorageService {
+  _FakeListingStorageService_3(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(
+          parent,
+          parentInvocation,
+        );
+}
+
 /// A class which mocks [ListingsProvider].
 ///
 /// See the documentation for Mockito's code generation for more information.
@@ -97,16 +109,16 @@ class MockListingsProvider extends _i1.Mock implements _i6.ListingsProvider {
       ) as _i3.ImageLoaderService);
 
   @override
-  _i4.ListingStorageService get storageService => (super.noSuchMethod(
+  _i10.ListingStorageService get storageService => (super.noSuchMethod(
         Invocation.getter(#storageService),
-        returnValue: _FakeListingStorageService_2(
+        returnValue: _FakeListingStorageService_3(
           this,
           Invocation.getter(#storageService),
         ),
-      ) as _i4.ListingStorageService);
+      ) as _i10.ListingStorageService);
 
   @override
-  List<_i7.Listing> get listings => (super.noSuchMethod(
+  List<_i6.Listing> get listings => (super.noSuchMethod(
         Invocation.getter(#listings),
         returnValue: <_i7.Listing>[],
       ) as List<_i7.Listing>);
@@ -143,6 +155,12 @@ class MockListingsProvider extends _i1.Mock implements _i6.ListingsProvider {
           Invocation.getter(#currentFilter),
         ),
       ) as _i5.SearchFilter);
+
+  @override
+  _i9.Site get selectedSite => (super.noSuchMethod(
+        Invocation.getter(#selectedSite),
+        returnValue: _i9.Site.funda,
+      ) as _i9.Site);
 
   @override
   bool get hasListeners => (super.noSuchMethod(
@@ -182,6 +200,25 @@ class MockListingsProvider extends _i1.Mock implements _i6.ListingsProvider {
         returnValue: _i8.Future<void>.value(),
         returnValueForMissingStub: _i8.Future<void>.value(),
       ) as _i8.Future<void>);
+
+  @override
+  void selectSite(_i9.Site? site) => super.noSuchMethod(
+        Invocation.method(
+          #selectSite,
+          [site],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  _i7.Future<void> markAsViewed(_i6.Listing? listing) => (super.noSuchMethod(
+        Invocation.method(
+          #markAsViewed,
+          [listing],
+        ),
+        returnValue: _i7.Future<void>.value(),
+        returnValueForMissingStub: _i7.Future<void>.value(),
+      ) as _i7.Future<void>);
 
   @override
   bool shouldLoadMore(int? currentItemIndex) => (super.noSuchMethod(

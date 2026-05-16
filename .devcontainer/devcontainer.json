@@ -1,0 +1,21 @@
+{
+  "name": "Flutter Development",
+  "image": "ghcr.io/cirruslabs/flutter:stable",
+  "workspaceFolder": "/workspace",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dart-code.dart-code",
+        "dart-code.flutter"
+      ],
+      "settings": {
+        "dart.flutterSdkPath": "/usr/local/flutter"
+      }
+    }
+  },
+  "onCreateCommand": "apt-get update && apt-get install -y git curl unzip xz-utils zip libglu1-mesa && flutter config --enable-web && flutter config --no-analytics",
+  "postCreateCommand": "flutter pub get",
+  "remoteUser": "root",
+  "forwardPorts": [8080]
+}
