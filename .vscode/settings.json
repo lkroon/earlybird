@@ -1,15 +1,4 @@
 {
-    // Format on save
-    "editor.formatOnSave": true,
-    // Use Dart's formatter
-    "[dart]": {
-        "editor.formatOnSave": true,
-        "editor.defaultFormatter": "Dart-Code.dart-code"
-    },
-    // Optional: Also format on paste
-    "editor.formatOnPaste": true,
-    // Optional: Show a ruler at 80 characters (Dart convention)
-    "editor.rulers": [
-        80
-    ]
+  "dart.flutterSdkPath": "/home/luckr/flutter",
+  "dart.sdkPath": "/home/luckr/flutter/bin/cache/dart-sdk"
 }

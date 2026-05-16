@@ -1,3 +1,4 @@
+
 # EarlyBird - Project Structure
 
 ## Overview
