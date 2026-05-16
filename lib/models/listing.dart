@@ -58,11 +58,7 @@ class Listing extends HiveObject {
       'title': title,
       'content': content,
       'url': url,
-      'imageUrls': imageUrls,
-      'firstSeenAt': firstSeenAt.millisecondsSinceEpoch,
-      'lastSeenAt': lastSeenAt?.millisecondsSinceEpoch,
-      'isViewed': isViewed,
-      'filterKey': filterKey,
+      'image': imageUrl,
     };
   }
 
