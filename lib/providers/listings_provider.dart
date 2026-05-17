@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../core/exceptions/captcha_exception.dart';
 import '../models/listing.dart';
@@ -8,6 +9,10 @@ import '../services/image_loader_service.dart';
 import '../services/listing_storage_service.dart';
 import '../core/constants/app_constants.dart';
 import '../core/utils/url_builder.dart';
+
+void _log(String msg) {
+  if (kDebugMode) debugPrint(msg);
+}
 
 class ListingsProvider extends ChangeNotifier {
   final ScraperService scraperService;
@@ -67,7 +72,7 @@ class ListingsProvider extends ChangeNotifier {
       _isLoading = false;
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();
-      debugPrint('Error fetching listings: $e');
+      _log('Error fetching listings: $e');
     }
   }
 
@@ -106,7 +111,7 @@ class ListingsProvider extends ChangeNotifier {
       _isLoadingMore = false;
       _errorMessage = 'Failed to load more listings: $e';
       notifyListeners();
-      debugPrint('Error loading more listings: $e');
+      _log('Error loading more listings: $e');
     }
   }
 
@@ -152,9 +157,9 @@ class ListingsProvider extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
-    debugPrint('[Provider] WebView extracted ${headings.length} headings');
+    _log('[Provider] WebView extracted ${headings.length} headings');
     if (headings.isNotEmpty) {
-      debugPrint('[Provider] First: ${headings.first}');
+      _log('[Provider] First: ${headings.first}');
     }
 
     if (headings.isEmpty) {
