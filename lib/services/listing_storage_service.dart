@@ -10,8 +10,13 @@ class ListingStorageService {
 
   /// Initializes the storage service and opens the Hive box
   Future<void> init() async {
-    _box = await Hive.openBox<Listing>(_boxName);
-    await _cleanupOldListings();
+    try {
+      _box = await Hive.openBox<Listing>(_boxName);
+      await _cleanupOldListings();
+    } catch (_) {
+      await Hive.deleteBoxFromDisk(_boxName);
+      _box = await Hive.openBox<Listing>(_boxName);
+    }
   }
 
   /// Gets all cached listings

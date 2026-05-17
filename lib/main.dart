@@ -26,7 +26,7 @@ void main() async {
           body: SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
-              child: Text(
+              child: SelectableText(
                 'Startup error:\n\n$e\n\n$stack',
                 style: const TextStyle(fontSize: 14, color: Colors.red),
               ),
