@@ -10,13 +10,32 @@ import 'screens/home/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Hive.initFlutter();
-  Hive.registerAdapter(ListingAdapter());
 
-  final storageService = ListingStorageService();
-  await storageService.init();
+  try {
+    await Hive.initFlutter();
+    Hive.registerAdapter(ListingAdapter());
 
-  runApp(MyApp(storageService: storageService));
+    final storageService = ListingStorageService();
+    await storageService.init();
+
+    runApp(MyApp(storageService: storageService));
+  } catch (e, stack) {
+    runApp(
+      MaterialApp(
+        home: Scaffold(
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Text(
+                'Startup error:\n\n$e\n\n$stack',
+                style: const TextStyle(fontSize: 14, color: Colors.red),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class MyApp extends StatelessWidget {
