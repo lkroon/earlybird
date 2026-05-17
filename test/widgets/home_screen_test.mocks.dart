@@ -164,11 +164,23 @@ class MockListingsProvider extends _i1.Mock implements _i5.ListingsProvider {
       ) as bool);
 
   @override
+  bool get needsCaptcha => (super.noSuchMethod(
+        Invocation.getter(#needsCaptcha),
+        returnValue: false,
+      ) as bool);
+
+  @override
   _i7.Future<void> refresh() => (super.noSuchMethod(
         Invocation.method(#refresh, []),
         returnValue: _i7.Future<void>.value(),
         returnValueForMissingStub: _i7.Future<void>.value(),
       ) as _i7.Future<void>);
+
+  @override
+  void onCaptchaSolved() => super.noSuchMethod(
+        Invocation.method(#onCaptchaSolved, []),
+        returnValueForMissingStub: null,
+      );
 
   @override
   void addListener(_i8.VoidCallback? listener) => super.noSuchMethod(

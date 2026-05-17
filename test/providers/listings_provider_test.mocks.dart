@@ -42,6 +42,30 @@ class MockScraperService extends _i1.Mock implements _i2.ScraperService {
       ) as String);
 
   @override
+  String get baseUrl => (super.noSuchMethod(
+        Invocation.getter(#baseUrl),
+        returnValue: _i3.dummyValue<String>(
+          this,
+          Invocation.getter(#baseUrl),
+        ),
+      ) as String);
+
+  @override
+  List<String> get botProtectionBodyIndicators => (super.noSuchMethod(
+        Invocation.getter(#botProtectionBodyIndicators),
+        returnValue: <String>[],
+      ) as List<String>);
+
+  @override
+  String get botProtectionPageTitle => (super.noSuchMethod(
+        Invocation.getter(#botProtectionPageTitle),
+        returnValue: _i3.dummyValue<String>(
+          this,
+          Invocation.getter(#botProtectionPageTitle),
+        ),
+      ) as String);
+
+  @override
   _i4.Future<List<Map<String, String>>> fetchListingHeadings(
           _i5.SearchFilter? filter) =>
       (super.noSuchMethod(

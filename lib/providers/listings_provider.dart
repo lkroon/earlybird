@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/exceptions/captcha_exception.dart';
 import '../models/listing.dart';
 import '../models/search_filter.dart';
 import '../models/site.dart';
@@ -25,6 +26,7 @@ class ListingsProvider extends ChangeNotifier {
   SearchFilter _currentFilter = SearchFilter();
   String? _errorMessage;
   Site _selectedSite = Site.funda;
+  bool _needsCaptcha = false;
 
   List<Listing> get listings => _listings;
   bool get isLoading => _isLoading;
@@ -33,6 +35,7 @@ class ListingsProvider extends ChangeNotifier {
   SearchFilter get currentFilter => _currentFilter;
   String? get errorMessage => _errorMessage;
   Site get selectedSite => _selectedSite;
+  bool get needsCaptcha => _needsCaptcha;
 
   void selectSite(Site site) {
     if (site == _selectedSite) return;
@@ -55,9 +58,13 @@ class ListingsProvider extends ChangeNotifier {
       notifyListeners();
 
       await loadMore();
+    } on CaptchaException {
+      _isLoading = false;
+      _needsCaptcha = true;
+      notifyListeners();
     } catch (e) {
       _isLoading = false;
-      _errorMessage = 'Failed to load listings: $e';
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();
       debugPrint('Error fetching listings: $e');
     }
@@ -90,6 +97,10 @@ class ListingsProvider extends ChangeNotifier {
       _currentIndex += batchSize;
       _isLoadingMore = false;
       notifyListeners();
+    } on CaptchaException {
+      _isLoadingMore = false;
+      _needsCaptcha = true;
+      notifyListeners();
     } catch (e) {
       _isLoadingMore = false;
       _errorMessage = 'Failed to load more listings: $e';
@@ -115,4 +126,10 @@ class ListingsProvider extends ChangeNotifier {
   }
 
   Future<void> refresh() => fetchListings();
+
+  void onCaptchaSolved() {
+    _needsCaptcha = false;
+    notifyListeners();
+    fetchListings();
+  }
 }

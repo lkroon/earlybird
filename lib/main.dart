@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
 import 'models/listing.dart';
 import 'providers/listings_provider.dart';
+import 'services/captcha_session_service.dart';
 import 'services/funda_scraper_service.dart';
 import 'services/listing_storage_service.dart';
 import 'screens/home/home_screen.dart';
@@ -18,7 +19,9 @@ void main() async {
     final storageService = ListingStorageService();
     await storageService.init();
 
-    runApp(MyApp(storageService: storageService));
+    final captchaSession = CaptchaSessionService();
+
+    runApp(MyApp(storageService: storageService, captchaSession: captchaSession));
   } catch (e, stack) {
     runApp(
       MaterialApp(
@@ -40,16 +43,27 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   final ListingStorageService storageService;
+  final CaptchaSessionService captchaSession;
 
-  const MyApp({super.key, required this.storageService});
+  const MyApp({
+    super.key,
+    required this.storageService,
+    required this.captchaSession,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => ListingsProvider(
-        scraperService: FundaScraperService(),
-        storageService: storageService,
-      ),
+    return MultiProvider(
+      providers: [
+        Provider<CaptchaSessionService>.value(value: captchaSession),
+        ChangeNotifierProvider(
+          create: (_) => ListingsProvider(
+            scraperService:
+                FundaScraperService(captchaSession: captchaSession),
+            storageService: storageService,
+          ),
+        ),
+      ],
       child: MaterialApp(
         title: 'EarlyBird',
         theme: AppTheme.lightTheme,

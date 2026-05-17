@@ -5,6 +5,7 @@ import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
 import 'package:earlybird/screens/home/home_screen.dart';
 import 'package:earlybird/providers/listings_provider.dart';
+import 'package:earlybird/services/captcha_session_service.dart';
 import 'package:earlybird/models/listing.dart';
 import 'package:earlybird/models/site.dart';
 
@@ -25,6 +26,7 @@ void main() {
       when(mockProvider.hasMore).thenReturn(false);
       when(mockProvider.errorMessage).thenReturn(null);
       when(mockProvider.selectedSite).thenReturn(Site.funda);
+      when(mockProvider.needsCaptcha).thenReturn(false);
       when(mockProvider.shouldLoadMore(any)).thenReturn(false);
       when(mockProvider.fetchListings()).thenAnswer((_) async => {});
       when(mockProvider.loadMore()).thenAnswer((_) async => {});
@@ -32,8 +34,13 @@ void main() {
     });
 
     Widget createHomeScreen() {
-      return ChangeNotifierProvider<ListingsProvider>.value(
-        value: mockProvider,
+      return MultiProvider(
+        providers: [
+          Provider<CaptchaSessionService>.value(
+              value: CaptchaSessionService()),
+          ChangeNotifierProvider<ListingsProvider>.value(
+              value: mockProvider),
+        ],
         child: const MaterialApp(
           home: HomeScreen(),
         ),

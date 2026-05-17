@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:http/http.dart' as http;
 import 'package:earlybird/services/funda_scraper_service.dart';
+import 'package:earlybird/services/captcha_session_service.dart';
 import 'package:earlybird/models/search_filter.dart';
 
 // This will generate mocks. Run: dart run build_runner build
@@ -12,9 +13,11 @@ import 'funda_scraper_service_test.mocks.dart';
 void main() {
   group('FundaScraperService Tests', () {
     late FundaScraperService service;
+    late CaptchaSessionService captchaSession;
 
     setUp(() {
-      service = FundaScraperService();
+      captchaSession = CaptchaSessionService();
+      service = FundaScraperService(captchaSession: captchaSession);
     });
 
     test('serviceName returns "Funda"', () {
@@ -87,13 +90,13 @@ void main() {
 
   group('FundaScraperService Integration Tests', () {
     test('can create service instance', () {
-      final service = FundaScraperService();
+      final service = FundaScraperService(captchaSession: CaptchaSessionService());
       expect(service, isNotNull);
       expect(service.serviceName, 'Funda');
     });
 
     test('fetchListingHeadings throws on non-200 status', () async {
-      final service = FundaScraperService();
+      final service = FundaScraperService(captchaSession: CaptchaSessionService());
       final filter = SearchFilter();
 
       // This will make an actual HTTP call. In a real test, you'd mock this.

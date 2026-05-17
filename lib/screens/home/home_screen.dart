@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/site.dart';
 import '../../providers/listings_provider.dart';
+import '../../services/captcha_session_service.dart';
+import 'widgets/captcha_webview.dart';
 import 'widgets/listing_card.dart';
 import 'widgets/filter_dialog.dart';
 import 'widgets/site_selector.dart';
@@ -97,6 +99,17 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildBody(ListingsProvider provider) {
+    if (provider.needsCaptcha) {
+      final captchaSession = context.read<CaptchaSessionService>();
+      return CaptchaWebView(
+        captchaSession: captchaSession,
+        domain: provider.scraperService.baseUrl,
+        botProtectionPageTitle:
+            provider.scraperService.botProtectionPageTitle,
+        onSolved: () => provider.onCaptchaSolved(),
+      );
+    }
+
     if (provider.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }

@@ -1,15 +1,33 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' as html_parser;
 import 'scraper_service.dart';
+import 'captcha_session_service.dart';
+import '../core/exceptions/captcha_exception.dart';
 import '../models/search_filter.dart';
 import '../core/constants/app_constants.dart';
 import '../core/utils/url_builder.dart';
 
-/// Funda-specific implementation of the scraper service
 class FundaScraperService implements ScraperService {
+  final CaptchaSessionService captchaSession;
+
+  FundaScraperService({required this.captchaSession});
+
   @override
   String get serviceName => 'Funda';
+
+  @override
+  String get baseUrl => 'https://www.funda.nl';
+
+  @override
+  List<String> get botProtectionBodyIndicators => [
+        'captcha',
+        '__akam_recaptcha',
+      ];
+
+  @override
+  String get botProtectionPageTitle => 'bijna op de pagina';
 
   @override
   Future<List<Map<String, String>>> fetchListingHeadings(
@@ -17,17 +35,31 @@ class FundaScraperService implements ScraperService {
     final fundaUrl = UrlBuilder.buildFundaUrl(filter);
     final url = UrlBuilder.withCorsProxy(fundaUrl);
 
-    final response = await http.get(
-      Uri.parse(url),
-      headers: AppConstants.defaultHeaders,
-    );
+    final headers = Map<String, String>.from(AppConstants.defaultHeaders);
+    if (captchaSession.hasValidSession(baseUrl)) {
+      headers['Cookie'] = captchaSession.cookieHeader(baseUrl);
+    }
+
+    final response = await http
+        .get(Uri.parse(url), headers: headers)
+        .timeout(const Duration(seconds: 15));
 
     if (response.statusCode != 200) {
       throw Exception('Failed to fetch listings: ${response.statusCode}');
     }
 
-    // Parse HTML
     final document = html_parser.parse(response.body);
+
+    final title = document.querySelector('title')?.text ?? '';
+    final isBotProtected = title.contains(botProtectionPageTitle) ||
+        botProtectionBodyIndicators
+            .any((indicator) => response.body.contains(indicator));
+
+    if (isBotProtected) {
+      captchaSession.clearSession(baseUrl);
+      throw CaptchaException();
+    }
+
     final allHeadings = document.querySelectorAll('h1, h2, h3, h4');
     final listings = <Map<String, String>>[];
 
@@ -79,9 +111,13 @@ class FundaScraperService implements ScraperService {
 
     try {
       final url = UrlBuilder.withCorsProxy(detailUrl);
+      final headers = Map<String, String>.from(AppConstants.defaultHeaders);
+      if (captchaSession.hasValidSession(baseUrl)) {
+        headers['Cookie'] = captchaSession.cookieHeader(baseUrl);
+      }
       final detailResponse = await http.get(
         Uri.parse(url),
-        headers: AppConstants.defaultHeaders,
+        headers: headers,
       );
 
       if (detailResponse.statusCode == 200) {
