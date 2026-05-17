@@ -28,34 +28,41 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
   _Phase _phase = _Phase.solvingCaptcha;
   Timer? _pollTimer;
   int _pollAttempts = 0;
+  String _debugInfo = '';
   static const _maxPollAttempts = 20;
   static const _pollInterval = Duration(milliseconds: 500);
 
   static const _extractionJs = '''
 (function() {
-  var links = document.querySelectorAll('a[href*="/detail/"]');
-  if (links.length === 0) return JSON.stringify([]);
-  var seen = {};
   var results = [];
+  var seen = {};
+
+  // Strategy 1: Find all links containing /detail/ or /koop/ or /huur/ detail patterns
+  var links = document.querySelectorAll('a[href*="/detail/"], a[href*="/koop/"], a[href*="/huur/"]');
   for (var i = 0; i < links.length; i++) {
     var link = links[i];
     var href = link.getAttribute('href');
     if (!href || seen[href]) continue;
+    if (href.indexOf('/detail/') === -1 && !href.match(/\\/(koop|huur)\\/[^/]+\\/[^/]+\\//)) continue;
     seen[href] = true;
     var url = href.startsWith('http') ? href : 'https://www.funda.nl' + href;
-    var heading = link.querySelector('h1, h2, h3, h4');
-    var title = heading ? heading.textContent.trim() : link.textContent.trim();
-    if (!title || title.length > 200) {
-      title = title ? title.substring(0, 200) : '';
+    var title = '';
+    var heading = link.querySelector('h1, h2, h3, h4, h5');
+    if (heading) {
+      title = heading.textContent.trim();
+    } else {
+      title = link.textContent.trim().split('\\n')[0].trim();
     }
-    var card = link.closest('[data-test-id], [class*="search-result"], [class*="listing"]');
+    if (!title || title.length < 3) continue;
+    if (title.length > 200) title = title.substring(0, 200);
+    var card = link.closest('[data-test-id], [class*="search-result"], [class*="listing"], [class*="card"], li, article');
     var content = '';
     if (card) {
-      var texts = card.querySelectorAll('span, p, li');
+      var texts = card.querySelectorAll('span, p, li, div');
       var parts = [];
       for (var j = 0; j < texts.length && parts.length < 5; j++) {
         var t = texts[j].textContent.trim();
-        if (t && t !== title && t.length > 2 && t.length < 100) {
+        if (t && t !== title && t.length > 2 && t.length < 100 && parts.indexOf(t) === -1) {
           parts.push(t);
         }
       }
@@ -63,18 +70,51 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
     }
     var img = '';
     var imgEl = card ? card.querySelector('img[src*="cloud.funda"], img[src*="funda"]') : null;
-    if (!imgEl && card) imgEl = card.querySelector('img[src]:not([src*="logo"])');
-    if (imgEl) img = imgEl.getAttribute('src') || '';
+    if (!imgEl && card) imgEl = card.querySelector('img[src]:not([src*="logo"]):not([src*="svg"])');
+    if (!imgEl) imgEl = link.querySelector('img[src]');
+    if (imgEl) img = imgEl.getAttribute('src') || imgEl.getAttribute('data-src') || '';
     results.push({title: title, content: content, url: url, image: img});
   }
+
+  // Strategy 2: If no results, try finding listing-like structures
+  if (results.length === 0) {
+    var allLinks = document.querySelectorAll('a[href]');
+    for (var i = 0; i < allLinks.length; i++) {
+      var link = allLinks[i];
+      var href = link.getAttribute('href') || '';
+      if (seen[href]) continue;
+      if (!href.match(/\\/[a-z]+-\\d+/)) continue;
+      if (href.indexOf('/detail/') === -1 && href.indexOf('/object/') === -1) continue;
+      seen[href] = true;
+      var url = href.startsWith('http') ? href : 'https://www.funda.nl' + href;
+      var title = link.textContent.trim().split('\\n')[0].trim();
+      if (!title || title.length < 3) continue;
+      if (title.length > 200) title = title.substring(0, 200);
+      results.push({title: title, content: '', url: url, image: ''});
+    }
+  }
+
   return JSON.stringify(results);
 })()
 ''';
 
-  static const _checkListingsJs = '''
+  static const _diagnosticJs = '''
 (function() {
-  var links = document.querySelectorAll('a[href*="/detail/"]');
-  return links.length;
+  var info = {};
+  info.title = document.title;
+  info.url = window.location.href;
+  info.allLinksCount = document.querySelectorAll('a').length;
+  info.detailLinks = document.querySelectorAll('a[href*="/detail/"]').length;
+  info.koopLinks = document.querySelectorAll('a[href*="/koop/"]').length;
+  info.h2Count = document.querySelectorAll('h2').length;
+  info.imgCount = document.querySelectorAll('img').length;
+  var sample = [];
+  var links = document.querySelectorAll('a[href]');
+  for (var i = 0; i < Math.min(links.length, 10); i++) {
+    sample.push(links[i].getAttribute('href'));
+  }
+  info.sampleHrefs = sample;
+  return JSON.stringify(info);
 })()
 ''';
 
@@ -105,6 +145,7 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
       'document.title',
     );
     final titleStr = title.toString().replaceAll('"', '');
+    debugPrint('[CaptchaWebView] Page finished: $url | title: $titleStr');
 
     if (titleStr.contains(widget.botProtectionPageTitle)) {
       setState(() => _phase = _Phase.solvingCaptcha);
@@ -112,6 +153,7 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
     }
 
     if (_phase == _Phase.solvingCaptcha) {
+      debugPrint('[CaptchaWebView] Captcha solved, navigating to search URL');
       setState(() => _phase = _Phase.loadingSearch);
       await Future.delayed(const Duration(milliseconds: 500));
       await _controller.loadRequest(Uri.parse(widget.url));
@@ -119,6 +161,7 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
     }
 
     if (_phase == _Phase.loadingSearch) {
+      debugPrint('[CaptchaWebView] Search page loaded, starting polling');
       setState(() => _phase = _Phase.polling);
       _startPolling();
     }
@@ -137,23 +180,41 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
     }
 
     _pollAttempts++;
+    debugPrint(
+        '[CaptchaWebView] Poll attempt $_pollAttempts/$_maxPollAttempts');
 
     try {
-      final countResult =
-          await _controller.runJavaScriptReturningResult(_checkListingsJs);
-      final count = int.tryParse(countResult.toString()) ?? 0;
+      final diagResult =
+          await _controller.runJavaScriptReturningResult(_diagnosticJs);
+      final diagStr = diagResult.toString().replaceAll(r'\"', '"');
+      final diagCleaned = diagStr.startsWith('"')
+          ? diagStr.substring(1, diagStr.length - 1)
+          : diagStr;
+      debugPrint('[CaptchaWebView] Diagnostics: $diagCleaned');
 
-      if (count > 0) {
+      final diag = json.decode(diagCleaned) as Map<String, dynamic>;
+      final detailLinks = diag['detailLinks'] as int? ?? 0;
+      final allLinks = diag['allLinksCount'] as int? ?? 0;
+
+      setState(() {
+        _debugInfo =
+            'Links: $allLinks | Detail: $detailLinks | Poll: $_pollAttempts';
+      });
+
+      if (detailLinks > 0) {
         _pollTimer?.cancel();
+        debugPrint('[CaptchaWebView] Found $detailLinks detail links, '
+            'extracting...');
         await _extractData();
       } else if (_pollAttempts >= _maxPollAttempts) {
         _pollTimer?.cancel();
+        debugPrint('[CaptchaWebView] Max polls reached, attempting extraction');
         await _extractData();
       }
     } catch (e) {
+      debugPrint('[CaptchaWebView] Poll error: $e');
       if (_pollAttempts >= _maxPollAttempts) {
         _pollTimer?.cancel();
-        debugPrint('WebView polling error: $e');
         widget.onError();
       }
     }
@@ -173,9 +234,13 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
       final List<dynamic> parsed = json.decode(cleaned);
       final headings =
           parsed.map((item) => Map<String, String>.from(item as Map)).toList();
+      debugPrint('[CaptchaWebView] Extracted ${headings.length} listings');
+      if (headings.isNotEmpty) {
+        debugPrint('[CaptchaWebView] First: ${headings.first}');
+      }
       widget.onDataExtracted(headings);
     } catch (e) {
-      debugPrint('WebView extraction error: $e');
+      debugPrint('[CaptchaWebView] Extraction error: $e');
       widget.onError();
     }
   }
@@ -205,9 +270,22 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
               const Icon(Icons.security, color: Colors.orange),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  _statusText,
-                  style: const TextStyle(fontSize: 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _statusText,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                    if (_debugInfo.isNotEmpty)
+                      Text(
+                        _debugInfo,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ],
