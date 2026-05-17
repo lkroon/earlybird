@@ -67,14 +67,4 @@ class MockScraperService extends _i1.Mock implements _i2.ScraperService {
           ),
         )),
       ) as _i4.Future<String>);
-
-  @override
-  _i4.Future<List<String>> fetchListingImages(String? detailUrl) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #fetchListingImages,
-          [detailUrl],
-        ),
-        returnValue: _i4.Future<List<String>>.value(<String>[]),
-      ) as _i4.Future<List<String>>);
 }
