@@ -237,6 +237,7 @@ class _ListingWebViewState extends State<ListingWebView> {
       widget.onDataExtracted(headings);
     } catch (e) {
       _log('[WebView] Extraction error: $e');
+      if (!mounted) return;
       widget.onError('Extraction parse error: $e');
     }
   }
@@ -288,7 +289,7 @@ class _ListingWebViewState extends State<ListingWebView> {
                   ),
                 ],
               ),
-              if (_debugInfo.isNotEmpty)
+              if (kDebugMode && _debugInfo.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
