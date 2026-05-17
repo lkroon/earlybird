@@ -5,10 +5,26 @@ import '../../../models/listing.dart';
 import '../../../providers/listings_provider.dart';
 
 const ColorFilter _greyscaleFilter = ColorFilter.matrix(<double>[
-  0.2126, 0.7152, 0.0722, 0, 0,
-  0.2126, 0.7152, 0.0722, 0, 0,
-  0.2126, 0.7152, 0.0722, 0, 0,
-  0, 0, 0, 1, 0,
+  0.2126,
+  0.7152,
+  0.0722,
+  0,
+  0,
+  0.2126,
+  0.7152,
+  0.0722,
+  0,
+  0,
+  0.2126,
+  0.7152,
+  0.0722,
+  0,
+  0,
+  0,
+  0,
+  0,
+  1,
+  0,
 ]);
 
 class ListingCard extends StatelessWidget {
@@ -31,7 +47,10 @@ class ListingCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ColorFiltered(
-              colorFilter: listing.isViewed ? _greyscaleFilter : const ColorFilter.mode(Colors.transparent, BlendMode.multiply),
+              colorFilter: listing.isViewed
+                  ? _greyscaleFilter
+                  : const ColorFilter.mode(
+                      Colors.transparent, BlendMode.multiply),
               child: Image.network(
                 listing.imageUrl,
                 height: 200,

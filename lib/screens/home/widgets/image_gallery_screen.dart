@@ -27,9 +27,8 @@ class _ImageGalleryScreenState extends State<ImageGalleryScreen> {
     super.initState();
     _currentIndex = widget.initialIndex;
     _pageController = PageController(initialPage: widget.initialIndex);
-    _imageUrls = widget.listing.imageUrl.isNotEmpty
-        ? [widget.listing.imageUrl]
-        : [];
+    _imageUrls =
+        widget.listing.imageUrl.isNotEmpty ? [widget.listing.imageUrl] : [];
   }
 
   @override

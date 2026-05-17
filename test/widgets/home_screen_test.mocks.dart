@@ -61,19 +61,22 @@ class MockListingsProvider extends _i1.Mock implements _i5.ListingsProvider {
   @override
   _i2.ScraperService get scraperService => (super.noSuchMethod(
         Invocation.getter(#scraperService),
-        returnValue: _FakeScraperService_0(this, Invocation.getter(#scraperService)),
+        returnValue:
+            _FakeScraperService_0(this, Invocation.getter(#scraperService)),
       ) as _i2.ScraperService);
 
   @override
   _i3.ImageLoaderService get imageLoaderService => (super.noSuchMethod(
         Invocation.getter(#imageLoaderService),
-        returnValue: _FakeImageLoaderService_1(this, Invocation.getter(#imageLoaderService)),
+        returnValue: _FakeImageLoaderService_1(
+            this, Invocation.getter(#imageLoaderService)),
       ) as _i3.ImageLoaderService);
 
   @override
   _i10.ListingStorageService get storageService => (super.noSuchMethod(
         Invocation.getter(#storageService),
-        returnValue: _FakeListingStorageService_3(this, Invocation.getter(#storageService)),
+        returnValue: _FakeListingStorageService_3(
+            this, Invocation.getter(#storageService)),
       ) as _i10.ListingStorageService);
 
   @override
@@ -103,7 +106,8 @@ class MockListingsProvider extends _i1.Mock implements _i5.ListingsProvider {
   @override
   _i4.SearchFilter get currentFilter => (super.noSuchMethod(
         Invocation.getter(#currentFilter),
-        returnValue: _FakeSearchFilter_2(this, Invocation.getter(#currentFilter)),
+        returnValue:
+            _FakeSearchFilter_2(this, Invocation.getter(#currentFilter)),
       ) as _i4.SearchFilter);
 
   @override

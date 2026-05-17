@@ -122,8 +122,8 @@ class MockListingStorageService extends _i1.Mock
   @override
   _i4.Future<void> toggleListingViewed(String? url, {bool? forceViewed}) =>
       (super.noSuchMethod(
-        Invocation.method(#toggleListingViewed, [url],
-            {#forceViewed: forceViewed}),
+        Invocation.method(
+            #toggleListingViewed, [url], {#forceViewed: forceViewed}),
         returnValue: _i4.Future<void>.value(),
         returnValueForMissingStub: _i4.Future<void>.value(),
       ) as _i4.Future<void>);
