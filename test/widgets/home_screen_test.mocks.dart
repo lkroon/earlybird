@@ -177,10 +177,31 @@ class MockListingsProvider extends _i1.Mock implements _i5.ListingsProvider {
       ) as _i7.Future<void>);
 
   @override
+  String get searchUrl => (super.noSuchMethod(
+        Invocation.getter(#searchUrl),
+        returnValue: 'https://www.funda.nl/zoeken/koop',
+      ) as String);
+
+  @override
   void onCaptchaSolved() => super.noSuchMethod(
         Invocation.method(#onCaptchaSolved, []),
         returnValueForMissingStub: null,
       );
+
+  @override
+  void onWebViewError([String? details]) => super.noSuchMethod(
+        Invocation.method(#onWebViewError, [details]),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  _i7.Future<void> onWebViewDataExtracted(
+          List<Map<String, String>>? headings) =>
+      (super.noSuchMethod(
+        Invocation.method(#onWebViewDataExtracted, [headings]),
+        returnValue: _i7.Future<void>.value(),
+        returnValueForMissingStub: _i7.Future<void>.value(),
+      ) as _i7.Future<void>);
 
   @override
   void addListener(_i8.VoidCallback? listener) => super.noSuchMethod(

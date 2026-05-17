@@ -134,7 +134,7 @@ class FundaScraperService implements ScraperService {
         }
       }
     } catch (e) {
-      debugPrint('Error fetching detail page: $e');
+      if (kDebugMode) debugPrint('Error fetching detail page: $e');
     }
 
     return '';

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../core/exceptions/captcha_exception.dart';
 import '../models/listing.dart';
 import '../models/search_filter.dart';
@@ -7,6 +7,11 @@ import '../services/scraper_service.dart';
 import '../services/image_loader_service.dart';
 import '../services/listing_storage_service.dart';
 import '../core/constants/app_constants.dart';
+import '../core/utils/url_builder.dart';
+
+void _log(String msg) {
+  if (kDebugMode) debugPrint(msg);
+}
 
 class ListingsProvider extends ChangeNotifier {
   final ScraperService scraperService;
@@ -66,7 +71,7 @@ class ListingsProvider extends ChangeNotifier {
       _isLoading = false;
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();
-      debugPrint('Error fetching listings: $e');
+      _log('Error fetching listings: $e');
     }
   }
 
@@ -105,7 +110,7 @@ class ListingsProvider extends ChangeNotifier {
       _isLoadingMore = false;
       _errorMessage = 'Failed to load more listings: $e';
       notifyListeners();
-      debugPrint('Error loading more listings: $e');
+      _log('Error loading more listings: $e');
     }
   }
 
@@ -127,9 +132,50 @@ class ListingsProvider extends ChangeNotifier {
 
   Future<void> refresh() => fetchListings();
 
+  String get searchUrl => UrlBuilder.buildFundaUrl(_currentFilter);
+
   void onCaptchaSolved() {
     _needsCaptcha = false;
     notifyListeners();
     fetchListings();
+  }
+
+  void onWebViewError([String? details]) {
+    _needsCaptcha = false;
+    _isLoading = false;
+    _errorMessage = details != null
+        ? 'Extraction failed: $details'
+        : 'Failed to extract listings. Tap retry to try again.';
+    notifyListeners();
+  }
+
+  Future<void> onWebViewDataExtracted(
+      List<Map<String, String>> headings) async {
+    _needsCaptcha = false;
+    _isLoading = false;
+    _errorMessage = null;
+    notifyListeners();
+
+    _log('[Provider] WebView extracted ${headings.length} headings');
+    if (headings.isNotEmpty) {
+      _log('[Provider] First: ${headings.first}');
+    }
+
+    if (headings.isEmpty) {
+      _errorMessage = 'No listings found on this page';
+      notifyListeners();
+      return;
+    }
+
+    final filterKey = _currentFilter.toQueryString();
+    final newListings =
+        headings.map((h) => Listing.fromMap(h, filterKey: filterKey)).toList();
+    final merged = storageService.mergeWithCache(newListings, filterKey);
+    await storageService.saveListings(merged);
+
+    _allHeadings = headings;
+    _currentIndex = headings.length;
+    _listings = merged;
+    notifyListeners();
   }
 }
