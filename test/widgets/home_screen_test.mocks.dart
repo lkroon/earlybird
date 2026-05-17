@@ -189,8 +189,8 @@ class MockListingsProvider extends _i1.Mock implements _i5.ListingsProvider {
       );
 
   @override
-  void onWebViewError() => super.noSuchMethod(
-        Invocation.method(#onWebViewError, []),
+  void onWebViewError([String? details]) => super.noSuchMethod(
+        Invocation.method(#onWebViewError, [details]),
         returnValueForMissingStub: null,
       );
 

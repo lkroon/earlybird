@@ -136,10 +136,12 @@ class ListingsProvider extends ChangeNotifier {
     fetchListings();
   }
 
-  void onWebViewError() {
+  void onWebViewError([String? details]) {
     _needsCaptcha = false;
     _isLoading = false;
-    _errorMessage = 'Failed to extract listings. Tap retry to try again.';
+    _errorMessage = details != null
+        ? 'Extraction failed: $details'
+        : 'Failed to extract listings. Tap retry to try again.';
     notifyListeners();
   }
 

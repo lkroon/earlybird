@@ -104,7 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
         botProtectionPageTitle: provider.scraperService.botProtectionPageTitle,
         onDataExtracted: (headings) =>
             provider.onWebViewDataExtracted(headings),
-        onError: () => provider.onWebViewError(),
+        onError: (details) => provider.onWebViewError(details),
       );
     }
 

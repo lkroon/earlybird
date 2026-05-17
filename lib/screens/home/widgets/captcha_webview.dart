@@ -7,7 +7,7 @@ class CaptchaWebView extends StatefulWidget {
   final String url;
   final String botProtectionPageTitle;
   final void Function(List<Map<String, String>> headings) onDataExtracted;
-  final VoidCallback onError;
+  final void Function(String details) onError;
 
   const CaptchaWebView({
     super.key,
@@ -21,29 +21,28 @@ class CaptchaWebView extends StatefulWidget {
   State<CaptchaWebView> createState() => _CaptchaWebViewState();
 }
 
-enum _Phase { solvingCaptcha, loadingSearch, polling, done }
+enum _Phase { loading, captcha, polling, done }
 
 class _CaptchaWebViewState extends State<CaptchaWebView> {
   late final WebViewController _controller;
-  _Phase _phase = _Phase.solvingCaptcha;
+  _Phase _phase = _Phase.loading;
   Timer? _pollTimer;
   int _pollAttempts = 0;
   String _debugInfo = '';
-  bool _hasNavigatedToSearch = false;
-  static const _maxPollAttempts = 20;
-  static const _pollInterval = Duration(milliseconds: 500);
+  static const _maxPollAttempts = 30;
+  static const _pollInterval = Duration(milliseconds: 1000);
 
   static const _extractionJs = '''
 (function() {
   var results = [];
   var seen = {};
 
-  var links = document.querySelectorAll('a[href*="/detail/"], a[href*="/koop/"], a[href*="/huur/"]');
+  var links = document.querySelectorAll('a[href]');
   for (var i = 0; i < links.length; i++) {
     var link = links[i];
     var href = link.getAttribute('href');
     if (!href || seen[href]) continue;
-    if (href.indexOf('/detail/') === -1 && !href.match(/\\/(koop|huur)\\/[^/]+\\/[^/]+\\//)) continue;
+    if (href.indexOf('/detail/') === -1) continue;
     seen[href] = true;
     var url = href.startsWith('http') ? href : 'https://www.funda.nl' + href;
     var title = '';
@@ -51,14 +50,16 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
     if (heading) {
       title = heading.textContent.trim();
     } else {
-      title = link.textContent.trim().split('\\n')[0].trim();
+      var textNodes = link.textContent.trim();
+      title = textNodes.split('\\n').filter(function(s) { return s.trim().length > 3; })[0] || '';
+      title = title.trim();
     }
     if (!title || title.length < 3) continue;
     if (title.length > 200) title = title.substring(0, 200);
-    var card = link.closest('[data-test-id], [class*="search-result"], [class*="listing"], [class*="card"], li, article');
+    var card = link.closest('[data-test-id], [class*="search-result"], [class*="listing"], [class*="card"], li, article, section');
     var content = '';
     if (card) {
-      var texts = card.querySelectorAll('span, p, li, div');
+      var texts = card.querySelectorAll('span, p, li');
       var parts = [];
       for (var j = 0; j < texts.length && parts.length < 5; j++) {
         var t = texts[j].textContent.trim();
@@ -66,7 +67,7 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
           parts.push(t);
         }
       }
-      content = parts.join(' · ');
+      content = parts.join(' | ');
     }
     var img = '';
     var imgEl = card ? card.querySelector('img[src*="cloud.funda"], img[src*="funda"]') : null;
@@ -75,23 +76,6 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
     if (imgEl) img = imgEl.getAttribute('src') || imgEl.getAttribute('data-src') || '';
     results.push({title: title, content: content, url: url, image: img});
   }
-
-  if (results.length === 0) {
-    var allLinks = document.querySelectorAll('a[href]');
-    for (var i = 0; i < allLinks.length; i++) {
-      var link = allLinks[i];
-      var href = link.getAttribute('href') || '';
-      if (seen[href]) continue;
-      if (href.indexOf('/detail/') === -1 && href.indexOf('/object/') === -1) continue;
-      seen[href] = true;
-      var url = href.startsWith('http') ? href : 'https://www.funda.nl' + href;
-      var title = link.textContent.trim().split('\\n')[0].trim();
-      if (!title || title.length < 3) continue;
-      if (title.length > 200) title = title.substring(0, 200);
-      results.push({title: title, content: '', url: url, image: ''});
-    }
-  }
-
   return JSON.stringify(results);
 })()
 ''';
@@ -101,17 +85,16 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
   var info = {};
   info.title = document.title;
   info.url = window.location.href;
-  info.allLinksCount = document.querySelectorAll('a').length;
+  info.allLinks = document.querySelectorAll('a').length;
   info.detailLinks = document.querySelectorAll('a[href*="/detail/"]').length;
-  info.koopLinks = document.querySelectorAll('a[href*="/koop/"]').length;
-  info.h2Count = document.querySelectorAll('h2').length;
-  info.imgCount = document.querySelectorAll('img').length;
-  var sample = [];
-  var links = document.querySelectorAll('a[href]');
-  for (var i = 0; i < Math.min(links.length, 10); i++) {
-    sample.push(links[i].getAttribute('href'));
+  info.imgs = document.querySelectorAll('img').length;
+  info.bodyLen = document.body ? document.body.innerHTML.length : 0;
+  var hrefs = [];
+  var all = document.querySelectorAll('a[href]');
+  for (var i = 0; i < Math.min(all.length, 15); i++) {
+    hrefs.push(all[i].getAttribute('href'));
   }
-  info.sampleHrefs = sample;
+  info.hrefs = hrefs;
   return JSON.stringify(info);
 })()
 ''';
@@ -119,9 +102,7 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
   @override
   void initState() {
     super.initState();
-    final baseUrl = Uri.parse(widget.url).origin;
-    debugPrint(
-        '[CaptchaWebView] Init: baseUrl=$baseUrl, searchUrl=${widget.url}');
+    debugPrint('[WebView] Loading search URL directly: ${widget.url}');
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
@@ -129,7 +110,7 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
           onPageFinished: _onPageFinished,
         ),
       )
-      ..loadRequest(Uri.parse(baseUrl));
+      ..loadRequest(Uri.parse(widget.url));
   }
 
   @override
@@ -145,43 +126,21 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
       'document.title',
     );
     final titleStr = title.toString().replaceAll('"', '');
-    debugPrint(
-        '[CaptchaWebView] onPageFinished: url=$url | title=$titleStr | phase=$_phase');
+    debugPrint('[WebView] Page finished: $url | title: "$titleStr" | '
+        'phase: $_phase');
 
     if (titleStr.contains(widget.botProtectionPageTitle)) {
-      if (_phase != _Phase.solvingCaptcha) {
-        debugPrint('[CaptchaWebView] Captcha detected after navigation, '
-            'resetting to solve');
-      }
-      setState(() => _phase = _Phase.solvingCaptcha);
-      _hasNavigatedToSearch = false;
+      setState(() {
+        _phase = _Phase.captcha;
+        _debugInfo = 'Captcha detected - solve to continue';
+      });
       return;
     }
 
-    if (_phase == _Phase.solvingCaptcha && !_hasNavigatedToSearch) {
-      debugPrint('[CaptchaWebView] Captcha solved, navigating to search URL');
-      _hasNavigatedToSearch = true;
-      setState(() => _phase = _Phase.loadingSearch);
-      await Future.delayed(const Duration(seconds: 1));
-      await _controller.loadRequest(Uri.parse(widget.url));
-      return;
-    }
-
-    if (_phase == _Phase.loadingSearch) {
-      final currentUrl = await _controller.runJavaScriptReturningResult(
-        'window.location.href',
-      );
-      final currentUrlStr = currentUrl.toString().replaceAll('"', '');
-      debugPrint('[CaptchaWebView] Checking URL: $currentUrlStr');
-
-      if (currentUrlStr.contains('/zoeken/')) {
-        debugPrint('[CaptchaWebView] On search page, starting polling');
-        setState(() => _phase = _Phase.polling);
-        _startPolling();
-      } else {
-        debugPrint(
-            '[CaptchaWebView] Not on search page yet, waiting for redirect');
-      }
+    if (_phase != _Phase.polling && _phase != _Phase.done) {
+      debugPrint('[WebView] Page loaded, starting DOM polling');
+      setState(() => _phase = _Phase.polling);
+      _startPolling();
     }
   }
 
@@ -198,44 +157,49 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
     }
 
     _pollAttempts++;
-    debugPrint(
-        '[CaptchaWebView] Poll attempt $_pollAttempts/$_maxPollAttempts');
 
     try {
       final diagResult =
           await _controller.runJavaScriptReturningResult(_diagnosticJs);
-      final diagStr = diagResult.toString().replaceAll(r'\"', '"');
-      final diagCleaned = diagStr.startsWith('"')
-          ? diagStr.substring(1, diagStr.length - 1)
-          : diagStr;
-      debugPrint('[CaptchaWebView] Diagnostics: $diagCleaned');
+      final diagStr = _cleanJsResult(diagResult.toString());
+      debugPrint('[WebView] Poll $_pollAttempts: $diagStr');
 
-      final diag = json.decode(diagCleaned) as Map<String, dynamic>;
+      final diag = json.decode(diagStr) as Map<String, dynamic>;
       final detailLinks = diag['detailLinks'] as int? ?? 0;
-      final koopLinks = diag['koopLinks'] as int? ?? 0;
-      final allLinks = diag['allLinksCount'] as int? ?? 0;
+      final allLinks = diag['allLinks'] as int? ?? 0;
+      final bodyLen = diag['bodyLen'] as int? ?? 0;
+      final pageUrl = diag['url'] as String? ?? '';
 
       setState(() {
-        _debugInfo = 'Links: $allLinks | Detail: $detailLinks | '
-            'Koop: $koopLinks | Poll: $_pollAttempts';
+        _debugInfo = 'Poll $_pollAttempts/$_maxPollAttempts | '
+            'Links: $allLinks | Detail: $detailLinks | '
+            'Body: ${bodyLen ~/ 1024}kb';
       });
 
-      if (detailLinks > 0 || koopLinks > 2) {
+      if (detailLinks > 0) {
         _pollTimer?.cancel();
-        debugPrint('[CaptchaWebView] Found listings, extracting...');
+        debugPrint('[WebView] Found $detailLinks detail links, extracting');
         await Future.delayed(const Duration(milliseconds: 500));
         await _extractData();
       } else if (_pollAttempts >= _maxPollAttempts) {
         _pollTimer?.cancel();
-        debugPrint(
-            '[CaptchaWebView] Max polls reached. Final diagnostics: $diagCleaned');
-        await _extractData();
+        final hrefs = diag['hrefs'] as List<dynamic>? ?? [];
+        debugPrint('[WebView] Max polls reached. URL: $pageUrl');
+        debugPrint('[WebView] Sample hrefs: $hrefs');
+        widget.onError(
+          'No /detail/ links found after ${_maxPollAttempts}s. '
+          'Page: $pageUrl | Links: $allLinks | Detail: $detailLinks | '
+          'Sample: ${hrefs.take(5).join(", ")}',
+        );
       }
     } catch (e) {
-      debugPrint('[CaptchaWebView] Poll error: $e');
+      debugPrint('[WebView] Poll $_pollAttempts error: $e');
+      setState(() {
+        _debugInfo = 'Poll $_pollAttempts error: $e';
+      });
       if (_pollAttempts >= _maxPollAttempts) {
         _pollTimer?.cancel();
-        widget.onError();
+        widget.onError('Polling failed: $e');
       }
     }
   }
@@ -247,32 +211,41 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
     try {
       final result =
           await _controller.runJavaScriptReturningResult(_extractionJs);
-      final jsonStr = result.toString().replaceAll(r'\"', '"');
-      final cleaned = jsonStr.startsWith('"')
-          ? jsonStr.substring(1, jsonStr.length - 1)
-          : jsonStr;
+      final cleaned = _cleanJsResult(result.toString());
+      debugPrint('[WebView] Raw extraction (first 200): '
+          '${cleaned.substring(0, cleaned.length.clamp(0, 200))}');
       final List<dynamic> parsed = json.decode(cleaned);
       final headings =
           parsed.map((item) => Map<String, String>.from(item as Map)).toList();
-      debugPrint('[CaptchaWebView] Extracted ${headings.length} listings');
+      debugPrint('[WebView] Extracted ${headings.length} listings');
       if (headings.isNotEmpty) {
-        debugPrint('[CaptchaWebView] First: ${headings.first}');
+        debugPrint('[WebView] First: ${headings.first}');
       }
       widget.onDataExtracted(headings);
     } catch (e) {
-      debugPrint('[CaptchaWebView] Extraction error: $e');
-      widget.onError();
+      debugPrint('[WebView] Extraction error: $e');
+      widget.onError('Extraction parse error: $e');
     }
+  }
+
+  String _cleanJsResult(String raw) {
+    var s = raw;
+    if (s.startsWith('"') && s.endsWith('"')) {
+      s = s.substring(1, s.length - 1);
+    }
+    s = s.replaceAll(r'\"', '"');
+    s = s.replaceAll(r'\/', '/');
+    return s;
   }
 
   String get _statusText {
     switch (_phase) {
-      case _Phase.solvingCaptcha:
+      case _Phase.loading:
+        return 'Loading search page...';
+      case _Phase.captcha:
         return 'Solve the verification to continue.';
-      case _Phase.loadingSearch:
-        return 'Captcha solved! Loading search results...';
       case _Phase.polling:
-        return 'Waiting for listings to load...';
+        return 'Waiting for listings to render...';
       case _Phase.done:
         return 'Extracting listings...';
     }
@@ -283,31 +256,35 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
     return Column(
       children: [
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           color: Colors.orange.shade50,
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.security, color: Colors.orange),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
+              Row(
+                children: [
+                  const Icon(Icons.security, color: Colors.orange, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
                       _statusText,
                       style: const TextStyle(fontSize: 14),
                     ),
-                    if (_debugInfo.isNotEmpty)
-                      Text(
-                        _debugInfo,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                  ],
-                ),
+                  ),
+                ],
               ),
+              if (_debugInfo.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    _debugInfo,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey.shade700,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
