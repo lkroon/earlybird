@@ -149,10 +149,13 @@ class ListingsProvider extends ChangeNotifier {
       List<Map<String, String>> headings) async {
     _needsCaptcha = false;
     _isLoading = false;
-    _allHeadings = headings;
-    _currentIndex = 0;
-    _listings = [];
+    _errorMessage = null;
     notifyListeners();
+
+    debugPrint('[Provider] WebView extracted ${headings.length} headings');
+    if (headings.isNotEmpty) {
+      debugPrint('[Provider] First: ${headings.first}');
+    }
 
     if (headings.isEmpty) {
       _errorMessage = 'No listings found on this page';
@@ -160,6 +163,15 @@ class ListingsProvider extends ChangeNotifier {
       return;
     }
 
-    await loadMore();
+    final filterKey = _currentFilter.toQueryString();
+    final newListings =
+        headings.map((h) => Listing.fromMap(h, filterKey: filterKey)).toList();
+    final merged = storageService.mergeWithCache(newListings, filterKey);
+    await storageService.saveListings(merged);
+
+    _allHeadings = headings;
+    _currentIndex = headings.length;
+    _listings = merged;
+    notifyListeners();
   }
 }
