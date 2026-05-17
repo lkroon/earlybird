@@ -229,13 +229,15 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
   }
 
   String _cleanJsResult(String raw) {
-    var s = raw;
-    if (s.startsWith('"') && s.endsWith('"')) {
-      s = s.substring(1, s.length - 1);
+    // runJavaScriptReturningResult wraps JS string results in quotes with
+    // escaped content. Use json.decode to properly unescape the outer layer.
+    if (raw.startsWith('"') && raw.endsWith('"')) {
+      try {
+        final decoded = json.decode(raw);
+        if (decoded is String) return decoded;
+      } catch (_) {}
     }
-    s = s.replaceAll(r'\"', '"');
-    s = s.replaceAll(r'\/', '/');
-    return s;
+    return raw;
   }
 
   String get _statusText {
