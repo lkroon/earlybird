@@ -136,6 +136,13 @@ class ListingsProvider extends ChangeNotifier {
     fetchListings();
   }
 
+  void onWebViewError() {
+    _needsCaptcha = false;
+    _isLoading = false;
+    _errorMessage = 'Failed to extract listings. Tap retry to try again.';
+    notifyListeners();
+  }
+
   Future<void> onWebViewDataExtracted(
       List<Map<String, String>> headings) async {
     _needsCaptcha = false;

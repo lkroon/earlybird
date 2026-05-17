@@ -29,6 +29,7 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
   Timer? _pollTimer;
   int _pollAttempts = 0;
   String _debugInfo = '';
+  bool _hasNavigatedToSearch = false;
   static const _maxPollAttempts = 20;
   static const _pollInterval = Duration(milliseconds: 500);
 
@@ -37,7 +38,6 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
   var results = [];
   var seen = {};
 
-  // Strategy 1: Find all links containing /detail/ or /koop/ or /huur/ detail patterns
   var links = document.querySelectorAll('a[href*="/detail/"], a[href*="/koop/"], a[href*="/huur/"]');
   for (var i = 0; i < links.length; i++) {
     var link = links[i];
@@ -76,14 +76,12 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
     results.push({title: title, content: content, url: url, image: img});
   }
 
-  // Strategy 2: If no results, try finding listing-like structures
   if (results.length === 0) {
     var allLinks = document.querySelectorAll('a[href]');
     for (var i = 0; i < allLinks.length; i++) {
       var link = allLinks[i];
       var href = link.getAttribute('href') || '';
       if (seen[href]) continue;
-      if (!href.match(/\\/[a-z]+-\\d+/)) continue;
       if (href.indexOf('/detail/') === -1 && href.indexOf('/object/') === -1) continue;
       seen[href] = true;
       var url = href.startsWith('http') ? href : 'https://www.funda.nl' + href;
@@ -122,6 +120,8 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
   void initState() {
     super.initState();
     final baseUrl = Uri.parse(widget.url).origin;
+    debugPrint(
+        '[CaptchaWebView] Init: baseUrl=$baseUrl, searchUrl=${widget.url}');
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
@@ -145,25 +145,43 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
       'document.title',
     );
     final titleStr = title.toString().replaceAll('"', '');
-    debugPrint('[CaptchaWebView] Page finished: $url | title: $titleStr');
+    debugPrint(
+        '[CaptchaWebView] onPageFinished: url=$url | title=$titleStr | phase=$_phase');
 
     if (titleStr.contains(widget.botProtectionPageTitle)) {
+      if (_phase != _Phase.solvingCaptcha) {
+        debugPrint('[CaptchaWebView] Captcha detected after navigation, '
+            'resetting to solve');
+      }
       setState(() => _phase = _Phase.solvingCaptcha);
+      _hasNavigatedToSearch = false;
       return;
     }
 
-    if (_phase == _Phase.solvingCaptcha) {
+    if (_phase == _Phase.solvingCaptcha && !_hasNavigatedToSearch) {
       debugPrint('[CaptchaWebView] Captcha solved, navigating to search URL');
+      _hasNavigatedToSearch = true;
       setState(() => _phase = _Phase.loadingSearch);
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(const Duration(seconds: 1));
       await _controller.loadRequest(Uri.parse(widget.url));
       return;
     }
 
     if (_phase == _Phase.loadingSearch) {
-      debugPrint('[CaptchaWebView] Search page loaded, starting polling');
-      setState(() => _phase = _Phase.polling);
-      _startPolling();
+      final currentUrl = await _controller.runJavaScriptReturningResult(
+        'window.location.href',
+      );
+      final currentUrlStr = currentUrl.toString().replaceAll('"', '');
+      debugPrint('[CaptchaWebView] Checking URL: $currentUrlStr');
+
+      if (currentUrlStr.contains('/zoeken/')) {
+        debugPrint('[CaptchaWebView] On search page, starting polling');
+        setState(() => _phase = _Phase.polling);
+        _startPolling();
+      } else {
+        debugPrint(
+            '[CaptchaWebView] Not on search page yet, waiting for redirect');
+      }
     }
   }
 
@@ -194,21 +212,23 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
 
       final diag = json.decode(diagCleaned) as Map<String, dynamic>;
       final detailLinks = diag['detailLinks'] as int? ?? 0;
+      final koopLinks = diag['koopLinks'] as int? ?? 0;
       final allLinks = diag['allLinksCount'] as int? ?? 0;
 
       setState(() {
-        _debugInfo =
-            'Links: $allLinks | Detail: $detailLinks | Poll: $_pollAttempts';
+        _debugInfo = 'Links: $allLinks | Detail: $detailLinks | '
+            'Koop: $koopLinks | Poll: $_pollAttempts';
       });
 
-      if (detailLinks > 0) {
+      if (detailLinks > 0 || koopLinks > 2) {
         _pollTimer?.cancel();
-        debugPrint('[CaptchaWebView] Found $detailLinks detail links, '
-            'extracting...');
+        debugPrint('[CaptchaWebView] Found listings, extracting...');
+        await Future.delayed(const Duration(milliseconds: 500));
         await _extractData();
       } else if (_pollAttempts >= _maxPollAttempts) {
         _pollTimer?.cancel();
-        debugPrint('[CaptchaWebView] Max polls reached, attempting extraction');
+        debugPrint(
+            '[CaptchaWebView] Max polls reached. Final diagnostics: $diagCleaned');
         await _extractData();
       }
     } catch (e) {
@@ -222,7 +242,7 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
 
   Future<void> _extractData() async {
     if (_phase == _Phase.done) return;
-    _phase = _Phase.done;
+    setState(() => _phase = _Phase.done);
 
     try {
       final result =
