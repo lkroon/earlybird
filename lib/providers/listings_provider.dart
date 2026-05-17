@@ -7,6 +7,7 @@ import '../services/scraper_service.dart';
 import '../services/image_loader_service.dart';
 import '../services/listing_storage_service.dart';
 import '../core/constants/app_constants.dart';
+import '../core/utils/url_builder.dart';
 
 class ListingsProvider extends ChangeNotifier {
   final ScraperService scraperService;
@@ -127,9 +128,29 @@ class ListingsProvider extends ChangeNotifier {
 
   Future<void> refresh() => fetchListings();
 
+  String get searchUrl => UrlBuilder.buildFundaUrl(_currentFilter);
+
   void onCaptchaSolved() {
     _needsCaptcha = false;
     notifyListeners();
     fetchListings();
+  }
+
+  Future<void> onWebViewDataExtracted(
+      List<Map<String, String>> headings) async {
+    _needsCaptcha = false;
+    _isLoading = false;
+    _allHeadings = headings;
+    _currentIndex = 0;
+    _listings = [];
+    notifyListeners();
+
+    if (headings.isEmpty) {
+      _errorMessage = 'No listings found on this page';
+      notifyListeners();
+      return;
+    }
+
+    await loadMore();
   }
 }

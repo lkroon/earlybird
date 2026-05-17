@@ -1,19 +1,19 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import '../../../services/captcha_session_service.dart';
 
 class CaptchaWebView extends StatefulWidget {
-  final CaptchaSessionService captchaSession;
-  final String domain;
+  final String url;
   final String botProtectionPageTitle;
-  final VoidCallback onSolved;
+  final void Function(List<Map<String, String>> headings) onDataExtracted;
+  final VoidCallback onError;
 
   const CaptchaWebView({
     super.key,
-    required this.captchaSession,
-    required this.domain,
+    required this.url,
     required this.botProtectionPageTitle,
-    required this.onSolved,
+    required this.onDataExtracted,
+    required this.onError,
   });
 
   @override
@@ -22,7 +22,40 @@ class CaptchaWebView extends StatefulWidget {
 
 class _CaptchaWebViewState extends State<CaptchaWebView> {
   late final WebViewController _controller;
-  bool _solving = true;
+  bool _extracted = false;
+  bool _showingCaptcha = false;
+
+  static const _extractionJs = '''
+(function() {
+  var headings = document.querySelectorAll('h1, h2, h3, h4');
+  var results = [];
+  for (var i = 0; i < headings.length; i++) {
+    var h = headings[i];
+    var text = h.textContent.trim();
+    if (!text) continue;
+    var link = h.querySelector('a[href]') || h.closest('a[href]');
+    if (!link) {
+      var innerHTML = h.innerHTML;
+      var match = innerHTML.match(/href="([^"]+)"/);
+      if (!match) continue;
+      var href = match[1];
+      if (href.indexOf('/detail/') === -1) continue;
+      var url = href.startsWith('http') ? href : 'https://www.funda.nl' + href;
+      var next = h.nextElementSibling;
+      var content = next ? next.textContent.trim().substring(0, 200) : '';
+      results.push({title: text, content: content, url: url, image: ''});
+    } else {
+      var href = link.getAttribute('href');
+      if (href.indexOf('/detail/') === -1) continue;
+      var url = href.startsWith('http') ? href : 'https://www.funda.nl' + href;
+      var next = h.nextElementSibling;
+      var content = next ? next.textContent.trim().substring(0, 200) : '';
+      results.push({title: text, content: content, url: url, image: ''});
+    }
+  }
+  return JSON.stringify(results);
+})()
+''';
 
   @override
   void initState() {
@@ -34,47 +67,47 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
           onPageFinished: _onPageFinished,
         ),
       )
-      ..loadRequest(Uri.parse(widget.domain));
+      ..loadRequest(Uri.parse(widget.url));
   }
 
   Future<void> _onPageFinished(String url) async {
+    if (_extracted) return;
+
     final title = await _controller.runJavaScriptReturningResult(
       'document.title',
     );
     final titleStr = title.toString().replaceAll('"', '');
-    if (!titleStr.contains(widget.botProtectionPageTitle) &&
-        titleStr.isNotEmpty) {
-      await _completeCaptcha();
+
+    if (titleStr.contains(widget.botProtectionPageTitle)) {
+      setState(() => _showingCaptcha = true);
+      return;
+    }
+
+    if (_showingCaptcha || !titleStr.contains(widget.botProtectionPageTitle)) {
+      await Future.delayed(const Duration(seconds: 1));
+      await _extractData();
     }
   }
 
-  Future<void> _completeCaptcha() async {
-    if (!_solving) return;
-    _solving = false;
-    await Future.delayed(const Duration(milliseconds: 500));
+  Future<void> _extractData() async {
+    if (_extracted) return;
+    _extracted = true;
 
-    final cookieString = await _controller.runJavaScriptReturningResult(
-      'document.cookie',
-    );
-    final cookies = _parseCookies(cookieString.toString());
-    widget.captchaSession.setSession(widget.domain, cookies);
-
-    if (mounted) {
-      widget.onSolved();
+    try {
+      final result =
+          await _controller.runJavaScriptReturningResult(_extractionJs);
+      final jsonStr = result.toString().replaceAll(r'\"', '"');
+      final cleaned = jsonStr.startsWith('"')
+          ? jsonStr.substring(1, jsonStr.length - 1)
+          : jsonStr;
+      final List<dynamic> parsed = json.decode(cleaned);
+      final headings =
+          parsed.map((item) => Map<String, String>.from(item as Map)).toList();
+      widget.onDataExtracted(headings);
+    } catch (e) {
+      debugPrint('WebView extraction error: $e');
+      widget.onError();
     }
-  }
-
-  Map<String, String> _parseCookies(String raw) {
-    final cleaned = raw.replaceAll('"', '');
-    if (cleaned.isEmpty) return {};
-    final cookies = <String, String>{};
-    for (final pair in cleaned.split('; ')) {
-      final idx = pair.indexOf('=');
-      if (idx > 0) {
-        cookies[pair.substring(0, idx)] = pair.substring(idx + 1);
-      }
-    }
-    return cookies;
   }
 
   @override
@@ -88,15 +121,13 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
             children: [
               const Icon(Icons.security, color: Colors.orange),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Solve the verification to continue browsing listings.',
-                  style: TextStyle(fontSize: 14),
+                  _showingCaptcha
+                      ? 'Solve the verification to continue.'
+                      : 'Loading listings via secure browser...',
+                  style: const TextStyle(fontSize: 14),
                 ),
-              ),
-              TextButton(
-                onPressed: _completeCaptcha,
-                child: const Text('Done'),
               ),
             ],
           ),
