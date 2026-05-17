@@ -1,15 +1,20 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-class CaptchaWebView extends StatefulWidget {
+void _log(String msg) {
+  if (kDebugMode) debugPrint(msg);
+}
+
+class ListingWebView extends StatefulWidget {
   final String url;
   final String botProtectionPageTitle;
   final void Function(List<Map<String, String>> headings) onDataExtracted;
   final void Function(String details) onError;
 
-  const CaptchaWebView({
+  const ListingWebView({
     super.key,
     required this.url,
     required this.botProtectionPageTitle,
@@ -18,12 +23,12 @@ class CaptchaWebView extends StatefulWidget {
   });
 
   @override
-  State<CaptchaWebView> createState() => _CaptchaWebViewState();
+  State<ListingWebView> createState() => _ListingWebViewState();
 }
 
 enum _Phase { loading, captcha, polling, done }
 
-class _CaptchaWebViewState extends State<CaptchaWebView> {
+class _ListingWebViewState extends State<ListingWebView> {
   late final WebViewController _controller;
   _Phase _phase = _Phase.loading;
   Timer? _pollTimer;
@@ -102,7 +107,7 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
   @override
   void initState() {
     super.initState();
-    debugPrint('[WebView] Loading search URL directly: ${widget.url}');
+    _log('[WebView] Loading search URL directly: ${widget.url}');
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
@@ -125,8 +130,10 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
     final title = await _controller.runJavaScriptReturningResult(
       'document.title',
     );
+    if (!mounted) return;
+
     final titleStr = title.toString().replaceAll('"', '');
-    debugPrint('[WebView] Page finished: $url | title: "$titleStr" | '
+    _log('[WebView] Page finished: $url | title: "$titleStr" | '
         'phase: $_phase');
 
     if (titleStr.contains(widget.botProtectionPageTitle)) {
@@ -138,7 +145,7 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
     }
 
     if (_phase != _Phase.polling && _phase != _Phase.done) {
-      debugPrint('[WebView] Page loaded, starting DOM polling');
+      _log('[WebView] Page loaded, starting DOM polling');
       setState(() => _phase = _Phase.polling);
       _startPolling();
     }
@@ -161,8 +168,10 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
     try {
       final diagResult =
           await _controller.runJavaScriptReturningResult(_diagnosticJs);
+      if (!mounted) return;
+
       final diagStr = _cleanJsResult(diagResult.toString());
-      debugPrint('[WebView] Poll $_pollAttempts: $diagStr');
+      _log('[WebView] Poll $_pollAttempts: $diagStr');
 
       final diag = json.decode(diagStr) as Map<String, dynamic>;
       final detailLinks = diag['detailLinks'] as int? ?? 0;
@@ -178,14 +187,15 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
 
       if (detailLinks > 0) {
         _pollTimer?.cancel();
-        debugPrint('[WebView] Found $detailLinks detail links, extracting');
+        _log('[WebView] Found $detailLinks detail links, extracting');
         await Future.delayed(const Duration(milliseconds: 500));
+        if (!mounted) return;
         await _extractData();
       } else if (_pollAttempts >= _maxPollAttempts) {
         _pollTimer?.cancel();
         final hrefs = diag['hrefs'] as List<dynamic>? ?? [];
-        debugPrint('[WebView] Max polls reached. URL: $pageUrl');
-        debugPrint('[WebView] Sample hrefs: $hrefs');
+        _log('[WebView] Max polls reached. URL: $pageUrl');
+        _log('[WebView] Sample hrefs: $hrefs');
         widget.onError(
           'No /detail/ links found after ${_maxPollAttempts}s. '
           'Page: $pageUrl | Links: $allLinks | Detail: $detailLinks | '
@@ -193,7 +203,8 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
         );
       }
     } catch (e) {
-      debugPrint('[WebView] Poll $_pollAttempts error: $e');
+      _log('[WebView] Poll $_pollAttempts error: $e');
+      if (!mounted) return;
       setState(() {
         _debugInfo = 'Poll $_pollAttempts error: $e';
       });
@@ -211,19 +222,21 @@ class _CaptchaWebViewState extends State<CaptchaWebView> {
     try {
       final result =
           await _controller.runJavaScriptReturningResult(_extractionJs);
+      if (!mounted) return;
+
       final cleaned = _cleanJsResult(result.toString());
-      debugPrint('[WebView] Raw extraction (first 200): '
+      _log('[WebView] Raw extraction (first 200): '
           '${cleaned.substring(0, cleaned.length.clamp(0, 200))}');
       final List<dynamic> parsed = json.decode(cleaned);
       final headings =
           parsed.map((item) => Map<String, String>.from(item as Map)).toList();
-      debugPrint('[WebView] Extracted ${headings.length} listings');
+      _log('[WebView] Extracted ${headings.length} listings');
       if (headings.isNotEmpty) {
-        debugPrint('[WebView] First: ${headings.first}');
+        _log('[WebView] First: ${headings.first}');
       }
       widget.onDataExtracted(headings);
     } catch (e) {
-      debugPrint('[WebView] Extraction error: $e');
+      _log('[WebView] Extraction error: $e');
       widget.onError('Extraction parse error: $e');
     }
   }

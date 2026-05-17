@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/site.dart';
 import '../../providers/listings_provider.dart';
-import 'widgets/captcha_webview.dart';
+import 'widgets/listing_webview.dart';
 import 'widgets/listing_card.dart';
 import 'widgets/filter_dialog.dart';
 import 'widgets/site_selector.dart';
@@ -99,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildBody(ListingsProvider provider) {
     if (provider.needsCaptcha) {
-      return CaptchaWebView(
+      return ListingWebView(
         url: provider.searchUrl,
         botProtectionPageTitle: provider.scraperService.botProtectionPageTitle,
         onDataExtracted: (headings) =>
