@@ -21,7 +21,8 @@ void main() async {
 
     final captchaSession = CaptchaSessionService();
 
-    runApp(MyApp(storageService: storageService, captchaSession: captchaSession));
+    runApp(
+        MyApp(storageService: storageService, captchaSession: captchaSession));
   } catch (e, stack) {
     runApp(
       MaterialApp(
@@ -58,8 +59,7 @@ class MyApp extends StatelessWidget {
         Provider<CaptchaSessionService>.value(value: captchaSession),
         ChangeNotifierProvider(
           create: (_) => ListingsProvider(
-            scraperService:
-                FundaScraperService(captchaSession: captchaSession),
+            scraperService: FundaScraperService(captchaSession: captchaSession),
             storageService: storageService,
           ),
         ),

@@ -12,9 +12,7 @@ class CaptchaSessionService {
   String cookieHeader(String domain) {
     final session = _sessions[domain];
     if (session == null) return '';
-    return session.cookies.entries
-        .map((e) => '${e.key}=${e.value}')
-        .join('; ');
+    return session.cookies.entries.map((e) => '${e.key}=${e.value}').join('; ');
   }
 
   void setSession(String domain, Map<String, String> cookies) {

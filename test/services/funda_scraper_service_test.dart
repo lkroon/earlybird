@@ -90,13 +90,15 @@ void main() {
 
   group('FundaScraperService Integration Tests', () {
     test('can create service instance', () {
-      final service = FundaScraperService(captchaSession: CaptchaSessionService());
+      final service =
+          FundaScraperService(captchaSession: CaptchaSessionService());
       expect(service, isNotNull);
       expect(service.serviceName, 'Funda');
     });
 
     test('fetchListingHeadings throws on non-200 status', () async {
-      final service = FundaScraperService(captchaSession: CaptchaSessionService());
+      final service =
+          FundaScraperService(captchaSession: CaptchaSessionService());
       final filter = SearchFilter();
 
       // This will make an actual HTTP call. In a real test, you'd mock this.

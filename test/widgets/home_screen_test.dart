@@ -36,10 +36,8 @@ void main() {
     Widget createHomeScreen() {
       return MultiProvider(
         providers: [
-          Provider<CaptchaSessionService>.value(
-              value: CaptchaSessionService()),
-          ChangeNotifierProvider<ListingsProvider>.value(
-              value: mockProvider),
+          Provider<CaptchaSessionService>.value(value: CaptchaSessionService()),
+          ChangeNotifierProvider<ListingsProvider>.value(value: mockProvider),
         ],
         child: const MaterialApp(
           home: HomeScreen(),

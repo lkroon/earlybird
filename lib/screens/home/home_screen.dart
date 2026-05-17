@@ -104,8 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
       return CaptchaWebView(
         captchaSession: captchaSession,
         domain: provider.scraperService.baseUrl,
-        botProtectionPageTitle:
-            provider.scraperService.botProtectionPageTitle,
+        botProtectionPageTitle: provider.scraperService.botProtectionPageTitle,
         onSolved: () => provider.onCaptchaSolved(),
       );
     }
